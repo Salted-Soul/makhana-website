@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Product Details</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<body>
+    <header class="header">
+
+        <div class="logo-container">
+            <img src="images/logo.jpeg" class="logo">
+            <span class="logo-text">Salted Soul</span>
+        </div>
+
+        <nav class="nav">
+
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="gallery.html">Gallery</a>
+            <a href="contact.html">Contact</a>
+
+            <div class="dropdown">
+
+                <a href="#">Flavours ▾</a>
+
+                <div class="dropdown-content">
+
+                    <a href="classic.html">Classic Roasted</a>
+                    <a href="pepper.html">Black Pepper</a>
+                    <a href="peri.html">Peri Peri</a>
+                    <a href="himalayan.html">Himalayan Salt</a>
+
+                </div>
+
+            </div>
+
+            <a href="cart.html" class="cart-icon">
+<i class="fa fa-shopping-cart"></i>
+<span id="cart-count">0</span>
+</a>
+
+        </nav>
+
+        <div class="menu-btn" onclick="toggleMenu()">
+            <i class="fa fa-bars"></i>
+        </div>
+
+    </header>
+
+    <section class="product-page">
+
+        <img id="product-image">
+
+        <div class="product-info">
+
+            <h1 id="product-name"></h1>
+
+            <p>
+                Healthy roasted fox nuts rich in protein and fiber. Perfect snack for daily energy.
+            </p>
+
+            <h2 id="product-price"></h2>
+
+            <button onclick="addToCartFromProduct()">Add To Cart</button>
+
+        </div>
+
+    </section>
+
+    <footer>
+
+        <div class="footer-grid">
+
+            <div>
+
+                <h3>Salted Soul</h3>
+
+                <p>
+                    Premium roasted fox nuts crafted for healthy snacking.
+                    From our soul to your snack bowl.
+                </p>
+
+            </div>
+
+            <div>
+
+                <h3>Quick Links</h3>
+
+                <p><a href="index.html">Home</a></p>
+                <p><a href="about.html">About Us</a></p>
+                <p><a href="gallery.html">Gallery</a></p>
+                <p><a href="contact.html">Contact</a></p>
+
+            </div>
+
+            <div>
+
+                <h3>Flavours</h3>
+
+                <p><a href="classic.html">Classic Roasted</a></p>
+                <p><a href="pepper.html">Black Pepper</a></p>
+                <p><a href="peri.html">Peri Peri</a></p>
+                <p><a href="himalayan.html">Himalayan Salt</a></p>
+
+            </div>
+
+            <div>
+
+                <h3>Contact</h3>
+
+                <p>📞 +91 8447273181</p>
+                <p>📞 +91 9310703571</p>
+
+                <p>✉️ jha84472731@gmail.com</p>
+                <p>✉️ aditi7532054315@gmail.com</p>
+
+            </div>
+
+            <div>
+
+                <h3>Follow Us</h3>
+
+                <i class="fab fa-instagram"></i>
+                <i class="fab fa-whatsapp"></i>
+                <i class="fab fa-facebook"></i>
+
+            </div>
+
+        </div>
+
+        <p class="footer-bottom">
+            © 2025 Salted Soul. All Rights Reserved.
+        </p>
+
+    </footer>
+
+    <script src="js/script.js"></script>
+
+</body>
+
+</html>

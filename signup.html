@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Signup - Salted Soul</title>
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+
+<body>
+
+<div class="auth-container">
+
+  <div class="auth-left"></div>
+
+  <div class="auth-right">
+    <div class="auth-box">
+
+      <h2>Create Account</h2>
+
+      <div id="messageBox"></div>
+
+      <!-- ✅ ADDED id (CRITICAL FIX) -->
+      <form id="signupForm" onsubmit="signup(event)">
+        <input id="name" type="text" placeholder="Full Name" required>
+        <input id="email" type="email" placeholder="Email" required>
+        <input id="password" type="password" placeholder="Password" required>
+
+        <button id="signupBtn" type="submit">Create Account</button>
+      </form>
+
+      <button class="google-btn">Continue with Google</button>
+
+      <p class="auth-link">
+        Already have an account? <a href="login.html">Login</a>
+      </p>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="js/auth.js"></script>
+</body>
+</html>

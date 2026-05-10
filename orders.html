@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Orders - Salted Soul</title>
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+.loading {
+    text-align:center;
+    margin:20px;
+}
+
+.card {
+    border:1px solid #ddd;
+    padding:15px;
+    margin-bottom:20px;
+    border-radius:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<header class="header">
+<div class="logo-container">
+<img src="images/logo.jpeg" class="logo">
+<span class="logo-text">Salted Soul</span>
+</div>
+
+<nav class="nav">
+<a href="index.html">Home</a>
+<a href="product.html">Products</a>
+<a href="cart.html">Cart</a>
+</nav>
+</header>
+
+<section style="max-width:900px;margin:40px auto;">
+<h2>My Orders</h2>
+
+<div id="loading" class="loading">Loading...</div>
+<div id="orders-container"></div>
+<div id="error" style="color:red;"></div>
+
+</section>
+
+<script>
+
+async function loadOrders() {
+
+const user = JSON.parse(localStorage.getItem("user"));
+const container = document.getElementById("orders-container");
+const loading = document.getElementById("loading");
+const errorBox = document.getElementById("error");
+
+if (!user) {
+container.innerHTML = `
+<h2>Please login first</h2>
+<a href="login.html">Login</a>
+`;
+return;
+}
+
+try {
+loading.style.display = "block";
+errorBox.innerText = "";
+
+const res = await fetch(`http://10.17.110.176:5000/api/order/${user.id}`, {
+credentials: "include"
+});
+
+// 🔥 SAFE PARSE
+const data = await res.json();
+
+// 🔥 HANDLE BOTH FORMATS (IMPORTANT)
+const orders = data.orders || data;
+
+loading.style.display = "none";
+
+if (!orders || orders.length === 0) {
+container.innerHTML = "<p>No orders yet</p>";
+return;
+}
+
+let html = "";
+
+orders.forEach(order => {
+
+const total = order.total || order.totalAmount || 0;
+const payment = order.payment || "Online";
+
+html += `
+<div class="card">
+<h3>Order ID: ${order._id}</h3>
+<p>Date: ${new Date(order.createdAt).toLocaleString()}</p>
+<p>Total: ₹${total}</p>
+<p>Payment: ${payment}</p>
+
+<h4>Items:</h4>
+`;
+
+(order.items || []).forEach(item => {
+html += `<p>${item.name || "Item"} × ${item.quantity || 1}</p>`;
+});
+
+html += `</div>`;
+});
+
+container.innerHTML = html;
+
+} catch (err) {
+loading.style.display = "none";
+errorBox.innerText = "Failed to load orders";
+console.error(err);
+}
+}
+
+loadOrders();
+
+</script>
+
+</body>
+</html>

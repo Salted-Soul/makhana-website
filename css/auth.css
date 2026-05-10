@@ -1,0 +1,94 @@
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #0f172a, #020617);
+  color: white;
+}
+
+/* LAYOUT */
+.auth-container {
+  display: flex;
+  height: 100vh;
+}
+
+.auth-left {
+  flex: 1;
+  background: url('../images/hero.jpeg') no-repeat center;
+  background-size: cover;
+}
+
+.auth-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* BOX */
+.auth-box {
+  width: 380px;
+  padding: 30px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.auth-box h2 {
+  margin-bottom: 20px;
+}
+
+/* INPUT */
+.auth-box input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+
+/* BUTTON */
+.auth-box button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #22c55e;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.auth-box button:hover {
+  background: #16a34a;
+}
+
+/* GOOGLE */
+.google-btn {
+  background: white;
+  color: black;
+  margin-top: 10px;
+}
+
+/* LINKS */
+.auth-link {
+  margin-top: 15px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* MESSAGE BOX */
+#messageBox {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.success {
+  color: #22c55e;
+}
+
+.error {
+  color: #ef4444;
+}

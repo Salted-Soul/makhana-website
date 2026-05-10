@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Salted Soul</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+
+<body>
+
+<div class="auth-container">
+
+    <!-- LEFT SIDE IMAGE -->
+    <div class="auth-left"></div>
+
+    <!-- RIGHT SIDE FORM -->
+    <div class="auth-right">
+        <div class="auth-box">
+
+            <h2>Welcome Back</h2>
+
+            <!-- ✅ MESSAGE BOX (NEW - for errors/success) -->
+            <div id="messageBox" class="message-box"></div>
+
+            <!-- ✅ FORM CONNECTED TO JS -->
+            <form id="loginForm" onsubmit="login(event)">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+
+                <!-- ✅ BUTTON CONNECTED -->
+                <button type="submit" id="loginBtn">Login</button>
+            </form>
+
+            <!-- GOOGLE BUTTON (TEMP FIX) -->
+            <button class="google-btn" onclick="handleGoogleLogin()">
+                Login with Google
+            </button>
+
+            <p class="auth-link">
+                Don’t have an account? <a href="signup.html">Signup</a>
+            </p>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- JS -->
+<script src="js/auth.js"></script>
+
+<!-- ✅ GOOGLE TEMP HANDLER -->
+<script>
+function handleGoogleLogin() {
+    alert("Google login coming in Phase 3 🚀");
+}
+</script>
+
+</body>
+</html>

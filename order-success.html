@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Order Placed | Salted Soul</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+
+.success-container{
+height:80vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+padding:20px;
+}
+
+.success-box{
+background:white;
+padding:40px;
+border-radius:12px;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+max-width:500px;
+width:100%;
+}
+
+.success-icon{
+font-size:60px;
+color:#2e7d32;
+margin-bottom:20px;
+}
+
+.success-box h2{
+margin-bottom:10px;
+}
+
+.success-box p{
+color:#555;
+margin-bottom:20px;
+}
+
+.order-id{
+font-weight:600;
+margin-bottom:20px;
+word-break: break-all;
+}
+
+.home-btn{
+padding:12px 25px;
+background:#2e7d32;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.home-btn:hover{
+background:#1b5e20;
+}
+
+/* 🔥 NEW */
+.loader{
+margin-top:10px;
+color:#777;
+font-size:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="success-container">
+
+<div class="success-box">
+
+<div class="success-icon">✔</div>
+
+<h2>Order Placed Successfully!</h2>
+
+<p>Thank you for shopping with Salted Soul.</p>
+
+<p class="order-id">Payment ID: <span id="orderId">Loading...</span></p>
+
+<div class="loader" id="statusText">Verifying your order...</div>
+
+<button class="home-btn" onclick="goHome()">Go to Home</button>
+
+</div>
+
+</div>
+
+<script>
+
+// ==============================
+// GET PAYMENT ID
+// ==============================
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get("orderId");
+
+const statusText = document.getElementById("statusText");
+
+if(orderId){
+document.getElementById("orderId").innerText = orderId;
+
+// ✅ Simulate success message
+setTimeout(()=>{
+statusText.innerText = "Order confirmed & saved successfully ✅";
+statusText.style.color = "green";
+},1500);
+
+}else{
+document.getElementById("orderId").innerText = "Not Available";
+statusText.innerText = "Something went wrong ⚠️";
+statusText.style.color = "red";
+}
+
+function goHome(){
+window.location.href = "index.html";
+}
+
+</script>
+
+</body>
+</html>

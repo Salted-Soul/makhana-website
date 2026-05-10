@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cart</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f6f6f6;
+}
+
+/* 🔥 NEW SMOOTH UI UPGRADE */
+body {
+    transition: all 0.3s ease;
+}
+
+.cart-title {
+    text-align: center;
+    margin: 20px;
+}
+
+.cart-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
+.cart-card {
+    width: 220px;
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.cart-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: contain;
+    background: #fafafa;
+}
+
+.cart-card h3 {
+    margin: 10px 0;
+}
+
+.price {
+    color: green;
+    font-weight: bold;
+}
+
+.qty-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.qty-controls button {
+    padding: 5px 10px;
+    border: none;
+    background: green;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.2s ease;
+}
+
+.qty-controls button:hover {
+    background: #1b5e20;
+}
+
+.remove-btn {
+    margin-top: 10px;
+    background: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.cart-summary {
+    text-align: center;
+    margin: 30px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.checkout-btn{
+    padding:12px 30px;
+    background:#2e7d32;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.checkout-btn:hover{
+    background:#1b5e20;
+}
+
+@media (max-width: 600px){
+    .cart-card{
+        width: 90%;
+    }
+}
+
+/* 🔥 NEW LOADING STYLE */
+.loading {
+    text-align:center;
+    font-size:18px;
+    margin-top:40px;
+}
+
+/* 🔥 ERROR BOX (NEW) */
+.error-box{
+    text-align:center;
+    color:red;
+    margin-top:20px;
+}
+
+/* 🔥 NEW: EMPTY STATE UI */
+.empty-state{
+    text-align:center;
+    margin-top:40px;
+    color:#777;
+    font-size:18px;
+}
+
+/* 🔥 TOAST SYSTEM (NEW UI/UX) */
+.toast{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:#333;
+    color:#fff;
+    padding:12px 18px;
+    border-radius:8px;
+    opacity:0;
+    transform:translateY(20px);
+    transition:all 0.3s ease;
+    z-index:9999;
+}
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+/* 🔥 BUTTON LOADING STATE */
+button.loading{
+    opacity:0.7;
+    pointer-events:none;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2 class="cart-title">🛒 Your Cart</h2>
+
+<div id="cartContainer" class="cart-grid"></div>
+
+<div class="cart-summary">
+    <h3 id="totalPrice"></h3>
+
+    <div style="text-align:center; margin-top:30px;">
+    <button onclick="goToCheckout()" class="checkout-btn" id="checkoutBtn">
+        Proceed to Checkout 🚀
+    </button>
+</div>
+</div>
+
+<!-- 🔥 TOAST -->
+<div id="toast" class="toast"></div>
+
+<script>
+const API = "http://10.17.110.176:5000/api";
+
+
+// =======================
+// 🔥 TOAST FUNCTION (NEW)
+// =======================
+function showToast(msg){
+    const toast = document.getElementById("toast");
+    if(!toast) return;
+
+    toast.innerText = msg;
+    toast.classList.add("show");
+
+    setTimeout(()=>{
+        toast.classList.remove("show");
+    }, 3000);
+}
+
+
+// 🔥 NEW SAFE FETCH WRAPPER (ADDED)
+async function safeFetch(url, options = {}) {
+    try {
+        const res = await fetch(url, {
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            },
+            ...options
+        });
+
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok, data };
+
+    } catch (err) {
+        console.error("Fetch error:", err);
+        return { ok: false, data: {} };
+    }
+}
+
+
+// 🔥 NEW LOADING STATE
+function showLoading() {
+    const container = document.getElementById("cartContainer");
+    if (container) {
+        container.innerHTML = `<div class="loading">Loading cart...</div>`;
+    }
+}
+
+
+// =======================
+// GET USER
+// =======================
+async function getUser() {
+    try {
+        const res = await fetch(API + "/auth/check", {
+            credentials: "include"
+        });
+
+        if (!res.ok) return null;
+
+        const data = await res.json();
+        return data.user;
+
+    } catch (err) {
+        console.error("Auth error:", err);
+        return null;
+    }
+}
+
+
+// =======================
+// FETCH CART (IMPROVED)
+// =======================
+async function fetchCart() {
+
+    showLoading();
+
+    const user = await getUser();
+
+    if (!user) {
+        showToast("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+
+    try {
+        const { ok, data } = await safeFetch(API + "/cart/" + user._id);
+
+        console.log("🛒 CART DATA:", data);
+
+        if (!ok) {
+            throw new Error("Cart API failed");
+        }
+
+        renderCart(data.items || []);
+
+    } catch (err) {
+        console.error("Cart fetch error:", err);
+
+        document.getElementById("cartContainer").innerHTML =
+            "<h3 class='error-box'>Failed to load cart ❌</h3>";
+    }
+}
+
+
+// =======================
+// 🔥 IMAGE FIXER (NEW)
+// =======================
+function fixImagePath(path){
+    if(!path) return "images/placeholder.png";
+
+    if(path.includes("localhost")) return path;
+
+    return path.startsWith("images/")
+        ? path
+        : "images/" + path;
+}
+
+
+// =======================
+// 🔥 SAFE TEXT ESCAPE (SECURITY ADD)
+// =======================
+function escapeHTML(str){
+    return String(str || "").replace(/[&<>"']/g, tag => ({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#39;'
+    }[tag]));
+}
+
+
+// =======================
+// RENDER CART (UPGRADED)
+// =======================
+function renderCart(items) {
+    const container = document.getElementById("cartContainer");
+    const totalBox = document.getElementById("totalPrice");
+
+    if (!container || !totalBox) return;
+
+    container.innerHTML = "";
+
+    if (!items.length) {
+        container.innerHTML = "<div class='empty-state'>Your cart is empty 😢</div>";
+        totalBox.innerText = "";
+        return;
+    }
+
+    let total = 0;
+
+    items.forEach(item => {
+        total += item.price * item.quantity;
+
+        const card = document.createElement("div");
+        card.className = "cart-card";
+
+        const imgSrc = fixImagePath(item.image);
+
+        card.innerHTML = `
+            <img src="${imgSrc}" onerror="this.src='images/placeholder.png'" />
+            <h3>${escapeHTML(item.name)}</h3>
+            <p class="price">₹${item.price}</p>
+
+            <div class="qty-controls">
+                <button onclick="updateQty('${item.name}', 'decrease')" aria-label="Decrease quantity">➖</button>
+                <span>${item.quantity}</span>
+                <button onclick="updateQty('${item.name}', 'increase')" aria-label="Increase quantity">➕</button>
+            </div>
+
+            <button class="remove-btn" onclick="removeItem('${item.name}')">Remove</button>
+        `;
+
+        container.appendChild(card);
+    });
+
+    totalBox.innerText = "Total: ₹" + total;
+}
+
+
+// =======================
+// 🔥 BUTTON LOADING HELPER (NEW)
+// =======================
+function setButtonLoading(state){
+    const btn = document.getElementById("checkoutBtn");
+    if(!btn) return;
+
+    if(state){
+        btn.classList.add("loading");
+        btn.innerText = "Processing...";
+    } else {
+        btn.classList.remove("loading");
+        btn.innerText = "Proceed to Checkout 🚀";
+    }
+}
+
+
+// =======================
+// UPDATE QTY (SAFE)
+// =======================
+async function updateQty(name, action) {
+    try {
+        const { ok } = await safeFetch(API + "/cart/update", {
+            method: "POST",
+            body: JSON.stringify({ name, action })
+        });
+
+        if (!ok) throw new Error("Update failed");
+
+        showToast("Cart updated");
+        fetchCart();
+
+    } catch (err) {
+        console.error("Update error:", err);
+        showToast("Failed to update item ❌");
+    }
+}
+
+
+// =======================
+// REMOVE ITEM (SAFE)
+// =======================
+async function removeItem(name) {
+    try {
+        const { ok } = await safeFetch(API + "/cart/update", {
+            method: "POST",
+            body: JSON.stringify({ name, forceRemove: true })
+        });
+
+        if (!ok) throw new Error("Remove failed");
+
+        showToast("Item removed");
+        fetchCart();
+
+    } catch (err) {
+        console.error("Remove error:", err);
+        showToast("Failed to remove item ❌");
+    }
+}
+
+
+// =======================
+// CHECKOUT
+// =======================
+function goToCheckout(){
+    setButtonLoading(true);
+
+    setTimeout(()=>{
+        window.location.href = "checkout.html";
+    }, 300);
+}
+
+
+// =======================
+// 🔥 SAFE AUTO REFRESH FIXED
+// =======================
+let refreshLock = false;
+
+setInterval(() => {
+    if(!refreshLock){
+        refreshLock = true;
+        fetchCart().finally(()=> refreshLock = false);
+    }
+}, 5000);
+
+
+// =======================
+// 🔥 GLOBAL ERROR HANDLER (NEW)
+// =======================
+window.addEventListener("error", (e)=>{
+    console.error("Global Error:", e.message);
+});
+
+
+// =======================
+// 🔥 PROMISE ERROR HANDLER (NEW)
+// =======================
+window.addEventListener("unhandledrejection", (e)=>{
+    console.error("Unhandled Promise:", e.reason);
+});
+
+
+// =======================
+// 🔥 SAFE DOM READY INIT (FIXES addEventListener NULL)
+// =======================
+document.addEventListener("DOMContentLoaded", () => {
+    try {
+        fetchCart();
+    } catch (err) {
+        console.error("Init error:", err);
+    }
+});
+
+// INIT (kept existing behavior)
+fetchCart();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background: #f5f6fa;
+        }
+
+        h1, h2 {
+            margin-bottom: 10px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            padding: 8px;
+            margin-right: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .Pending { color: orange; }
+        .Processing { color: blue; }
+        .Shipped { color: purple; }
+        .Delivered { color: green; }
+
+        #error {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Admin Dashboard</h1>
+
+<div id="stats"></div>
+
+<h2>Users</h2>
+
+<div class="controls">
+    <input type="text" id="userSearch" placeholder="Search users...">
+</div>
+
+<div id="users"></div>
+
+<h2>Orders</h2>
+
+<div class="controls">
+    <input type="text" id="orderSearch" placeholder="Search by user...">
+    
+    <select id="statusFilter">
+        <option value="">All</option>
+        <option>Pending</option>
+        <option>Processing</option>
+        <option>Shipped</option>
+        <option>Delivered</option>
+    </select>
+</div>
+
+<div id="orders"></div>
+
+<div id="error"></div>
+
+<script src="admin.js"></script>
+
+</body>
+</html>

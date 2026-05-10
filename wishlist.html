@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>My Wishlist</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<body>
+
+    <h1 style="text-align:center;margin-top:40px;">My Wishlist</h1>
+
+    <section class="products">
+
+        <div class="product-container" id="wishlist-items">
+
+        </div>
+
+    </section>
+
+    <script src="js/script.js"></script>
+
+<script>
+window.addEventListener("DOMContentLoaded", ()=>{
+    renderWishlist();
+    updateWishlistCount();
+    syncWishlistUI();
+});
+</script>
+</body>
+
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Checkout - Salted Soul</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<style>
+body{
+background:#f5f6fa;
+font-family: system-ui, -apple-system, sans-serif;
+}
+
+.checkout-container {
+display:flex;
+gap:30px;
+padding:40px;
+flex-wrap:wrap;
+max-width:1100px;
+margin:auto;
+}
+
+.checkout-form, .order-summary {
+flex:1;
+background:white;
+padding:25px;
+border-radius:12px;
+box-shadow:0 4px 20px rgba(0,0,0,0.08);
+}
+
+.checkout-form h2{
+margin-bottom:20px;
+}
+
+.checkout-form input,
+.checkout-form textarea,
+.checkout-form select {
+width:100%;
+margin-bottom:15px;
+padding:12px;
+border-radius:8px;
+border:1px solid #ddd;
+font-size:14px;
+transition:0.2s;
+}
+
+.checkout-form input:focus,
+.checkout-form textarea:focus,
+.checkout-form select:focus{
+border-color:#2e7d32;
+outline:none;
+box-shadow:0 0 0 2px rgba(46,125,50,0.1);
+}
+
+.checkout-btn{
+padding:15px;
+background:#2e7d32;
+color:white;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-size:16px;
+width:100%;
+font-weight:600;
+transition:0.3s;
+}
+
+.checkout-btn:hover{
+background:#1b5e20;
+transform:translateY(-1px);
+}
+
+.checkout-btn:disabled{
+opacity:0.6;
+cursor:not-allowed;
+}
+
+.item-row{
+display:flex;
+justify-content:space-between;
+margin-bottom:12px;
+font-size:14px;
+}
+
+.total{
+font-size:20px;
+font-weight:bold;
+margin-top:15px;
+}
+
+.status{
+margin-top:12px;
+font-size:14px;
+color:#666;
+}
+
+/* 🔥 PAYMENT OPTIONS UI */
+.payment-tabs{
+display:flex;
+gap:10px;
+margin-bottom:15px;
+}
+
+.pay-option{
+flex:1;
+padding:10px;
+border-radius:8px;
+border:1px solid #ddd;
+background:#fafafa;
+cursor:pointer;
+text-align:center;
+font-size:13px;
+transition:0.2s;
+}
+
+.pay-option.active{
+background:#2e7d32;
+color:white;
+border-color:#2e7d32;
+}
+
+/* 🔥 UPI BOX */
+.upi-box{
+background:#f9fafb;
+padding:12px;
+border-radius:8px;
+margin-bottom:15px;
+border:1px solid #eee;
+}
+
+.upi-box label{
+font-size:13px;
+color:#555;
+display:block;
+margin-bottom:5px;
+}
+
+/* 🔥 APP BUTTONS */
+.app-buttons{
+display:flex;
+gap:10px;
+margin-bottom:15px;
+}
+
+.app-btn{
+flex:1;
+padding:10px;
+border-radius:8px;
+border:1px solid #ddd;
+text-align:center;
+cursor:pointer;
+background:white;
+font-size:13px;
+transition:0.2s;
+}
+
+.app-btn:hover{
+border-color:#2e7d32;
+}
+
+/* 🔥 QR PREVIEW */
+.qr-box{
+display:none;
+text-align:center;
+padding:15px;
+border:1px dashed #ccc;
+border-radius:8px;
+margin-bottom:15px;
+}
+
+.qr-box img{
+width:120px;
+opacity:0.6;
+}
+
+.qr-box.active{
+display:block;
+}
+
+/* 🔥 RESPONSIVE */
+@media(max-width:768px){
+.checkout-container{
+flex-direction:column;
+padding:20px;
+}
+}
+</style>
+
+</head>
+
+<body>
+
+<header class="header">
+<div class="logo-container">
+<img src="images/logo.jpeg" class="logo">
+<span class="logo-text">Salted Soul</span>
+</div>
+
+<nav class="nav">
+<a href="index.html">Home</a>
+<a href="product.html">Products</a>
+<a href="about.html">About</a>
+<a href="contact.html">Contact</a>
+<a href="cart.html">🛒</a>
+</nav>
+</header>
+
+<section class="checkout-container">
+
+<div class="checkout-form">
+<h2>Delivery Details</h2>
+
+<input type="text" id="name" placeholder="Full Name">
+<input type="text" id="phone" placeholder="Phone Number">
+<textarea id="address" placeholder="Full Address"></textarea>
+
+<select id="payment">
+<option value="cod">Cash on Delivery</option>
+<option value="online">Online Payment</option>
+</select>
+
+<!-- 🔥 PAYMENT TABS -->
+<div class="payment-tabs">
+<div class="pay-option active" id="pay-upi">UPI</div>
+<div class="pay-option" id="pay-apps">Apps</div>
+<div class="pay-option" id="pay-qr">QR</div>
+</div>
+
+<!-- 🔥 UPI INPUT -->
+<div class="upi-box">
+<label>Enter UPI ID</label>
+<input type="text" id="upiId" placeholder="yourname@upi">
+</div>
+
+<!-- 🔥 APP BUTTONS -->
+<div class="app-buttons">
+<div class="app-btn">GPay</div>
+<div class="app-btn">PhonePe</div>
+<div class="app-btn">Paytm</div>
+</div>
+
+<!-- 🔥 QR PREVIEW -->
+<div class="qr-box" id="qrBox">
+<p>Scan QR after clicking Pay</p>
+<img src="images/logo.jpeg">
+</div>
+
+<button class="checkout-btn" id="checkoutBtn">
+Place Order
+</button>
+
+<div class="status" id="statusText"></div>
+</div>
+
+<div class="order-summary">
+<h2>Order Summary</h2>
+<div id="order-items"></div>
+<h3 class="total">Total: ₹<span id="final-total">0</span></h3>
+</div>
+
+</section>
+
+<script src="checkout.js"></script>
+
+<script>
+// 🔥 UI INTERACTION ONLY (SAFE ADDITION)
+document.addEventListener("DOMContentLoaded", () => {
+
+const tabs = document.querySelectorAll(".pay-option");
+const qrBox = document.getElementById("qrBox");
+
+tabs.forEach(tab=>{
+tab.addEventListener("click", ()=>{
+tabs.forEach(t=>t.classList.remove("active"));
+tab.classList.add("active");
+
+if(tab.id === "pay-qr"){
+qrBox.classList.add("active");
+}else{
+qrBox.classList.remove("active");
+}
+
+});
+});
+
+});
+</script>
+
+</body>
+</html>

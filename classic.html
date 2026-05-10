@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Classic Roasted Makhana | Salted Soul</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#f6f6f6;
+color:#333;
+line-height:1.6;
+}
+
+/* HEADER */
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 8%;
+background:white;
+box-shadow:0 3px 15px rgba(0,0,0,0.08);
+}
+
+.logo{
+font-weight:600;
+font-size:22px;
+color:#2e7d32;
+}
+
+.nav a{
+margin-left:25px;
+text-decoration:none;
+color:#333;
+font-weight:500;
+}
+
+.nav a:hover{
+color:#2e7d32;
+}
+
+/* PRODUCT HERO */
+
+.product-hero{
+display:flex;
+gap:60px;
+padding:80px 10%;
+align-items:center;
+background:white;
+}
+
+.product-hero img{
+width:420px;
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+.product-info h1{
+font-size:38px;
+margin-bottom:10px;
+}
+
+.price{
+font-size:24px;
+color:#2e7d32;
+margin:15px 0;
+font-weight:600;
+}
+
+.product-info p{
+color:#555;
+margin-bottom:20px;
+}
+
+.buy-btn{
+background:#2e7d32;
+color:white;
+padding:14px 30px;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.buy-btn:hover{
+background:#1b5e20;
+}
+
+/* SECTION */
+
+.section{
+padding:70px 10%;
+}
+
+.section h2{
+font-size:30px;
+margin-bottom:25px;
+text-align:center;
+}
+
+/* INGREDIENTS */
+
+.ingredients{
+background:white;
+padding:40px;
+border-radius:12px;
+box-shadow:0 5px 15px rgba(0,0,0,0.08);
+max-width:800px;
+margin:auto;
+}
+
+/* BENEFITS */
+
+.benefits-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:30px;
+margin-top:30px;
+}
+
+.benefit-card{
+background:white;
+padding:25px;
+border-radius:12px;
+box-shadow:0 5px 15px rgba(0,0,0,0.08);
+transition:0.3s;
+}
+
+.benefit-card:hover{
+transform:translateY(-5px);
+}
+
+/* FOOTER */
+
+footer{
+background:#111;
+color:white;
+padding:50px 10%;
+text-align:center;
+margin-top:60px;
+}
+
+footer p{
+color:#bbb;
+}
+
+/* MOBILE */
+
+@media(max-width:900px){
+
+.product-hero{
+flex-direction:column;
+text-align:center;
+}
+
+.product-hero img{
+width:280px;
+}
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header class="header">
+
+<div class="logo">Salted Soul</div>
+
+<nav class="nav">
+<a href="index.html">Home</a>
+<a href="about.html">About</a>
+<a href="gallery.html">Gallery</a>
+<a href="contact.html">Contact</a>
+<a href="cart.html">Cart</a>
+
+<a href="cart.html" class="cart-icon">
+<i class="fa fa-shopping-cart"></i>
+<span id="cart-count">0</span>
+</a>
+</nav>
+
+
+
+</header>
+
+
+
+<section class="product-hero">
+
+<img src="images/plain_makhane.jpeg">
+
+<div class="product-info">
+
+<h1>Classic Roasted Makhana</h1>
+
+<p>
+A light, crunchy, and nutritious snack crafted from premium quality fox nuts.
+Roasted to perfection, our Classic Makhana delivers a naturally delicious taste
+while keeping your snacking healthy and guilt-free.
+</p>
+
+<div class="price">₹199</div>
+
+<button class="buy-btn" onclick="addToCart('Classic Roasted',199,'images/plain_makhane.jpeg')">
+Add To Cart
+</button>
+
+</div>
+
+</section>
+
+
+
+<section class="section">
+
+<h2>Ingredients</h2>
+
+<div class="ingredients">
+
+<p>
+Fox Nut (Makhana), Olive Oil, Rock Salt, Anti-Caking Agent (INS 551)
+</p>
+
+</div>
+
+</section>
+
+
+
+<section class="section">
+
+<h2>Why Choose Classic Makhana?</h2>
+
+<div class="benefits-grid">
+
+<div class="benefit-card">
+<h3>High Protein Snack</h3>
+<p>
+Makhana is naturally rich in plant-based protein, helping provide sustained
+energy and supporting muscle health. 
+</p>
+</div>
+
+<div class="benefit-card">
+<h3>Weight Friendly</h3>
+<p>
+Low in calories and high in fiber, makhana can help control hunger and support
+healthy weight management. 
+</p>
+</div>
+
+<div class="benefit-card">
+<h3>Heart Healthy</h3>
+<p>
+Rich in magnesium and potassium, makhana supports healthy blood pressure and
+overall cardiovascular wellness. 
+</div>
+
+<div class="benefit-card">
+<h3>Bone Strength</h3>
+<p>
+Fox nuts contain calcium and essential minerals that contribute to stronger
+bones and better overall health.
+</p>
+</div>
+
+<div class="benefit-card">
+<h3>Easy To Digest</h3>
+<p>
+Makhana is light on the stomach and gluten-free, making it a great snack option
+for all age groups.
+</p>
+</div>
+
+<div class="benefit-card">
+<h3>Antioxidant Rich</h3>
+<p>
+Fox nuts contain natural antioxidants that help protect cells from damage and
+support immunity.
+</p>
+</div>
+
+</div>
+
+</section>
+
+
+
+<section class="section">
+
+<h2>Perfect For Every Moment</h2>
+
+<p style="max-width:800px;margin:auto;text-align:center;color:#555">
+
+Whether it's a movie night, a quick office snack, or a healthy evening bite,
+Classic Roasted Makhana offers the perfect balance of taste and nutrition.
+With its crunchy texture and light seasoning, it is a wholesome alternative
+to deep-fried snacks.
+
+</p>
+
+</section>
+
+
+
+<footer>
+
+<p>© 2025 Salted Soul | Premium Roasted Makhana</p>
+
+</footer>
+
+
+
+<script>
+
+function addToCart(name,price,img){
+
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+
+cart.push({name,price,img,qty:1});
+
+localStorage.setItem("cart",JSON.stringify(cart));
+
+alert("Product added to cart");
+
+}
+
+</script>
+
+</body>
+</html>

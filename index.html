@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Salted Soul | Premium Makhana</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+</head>
+
+
+
+<body>
+
+
+    <header class="header">
+
+        <div class="logo-container">
+            <img src="images/logo.jpeg" class="logo">
+            <span class="logo-text">Salted Soul</span>
+        </div>
+
+        <div class="search-box">
+            <input type="text" placeholder="Search flavours...">
+            <i class="fa fa-search search-icon"></i>
+        </div>
+
+        <nav class="nav">
+
+            <a href="index.html">Home</a>
+
+            <div class="about-dropdown">
+                <a href="#">About ▾</a>
+                <div class="about-dropdown-content">
+                    <a href="faq.html">FAQ</a>
+                    <a href="about.html">Why Us</a>
+                </div>
+            </div>
+
+            <a href="gallery.html">Gallery</a>
+            <a href="contact.html">Contact</a>
+
+            <div class="flavour-dropdown">
+                <a href="#">Flavours ▾</a>
+                <div class="flavour-dropdown-content">
+                    <a href="classic.html">Classic Roasted</a>
+                    <a href="pepper.html">Black Pepper</a>
+                    <a href="peri.html">Peri Peri</a>
+                    <a href="himalayan.html">Himalayan Salt</a>
+                </div>
+            </div>
+
+            <a href="wishlist.html"><i class="fa-regular fa-heart"></i></a>
+            <a href="cart.html"><i class="fa fa-shopping-cart"></i></a>
+
+          <!-- ✅ UPDATED PROFILE (FINAL) -->
+<div class="profile-box" id="profileBox">
+
+    <div class="profile-btn" id="profileBtn">
+        <i class="fa fa-user"></i>
+        <span id="usernameText">Account</span>
+    </div>
+
+    <div class="profile-dropdown" id="profileDropdown">
+        <a href="orders.html">My Orders</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </div>
+
+</div>
+
+        </nav>
+
+    </header>
+
+    <!-- AUTH BAR -->
+    <div class="auth-bar">
+        <div class="auth-container">
+            <span id="userSection">
+                <a href="login.html">Login</a> |
+                <a href="signup.html">Sign Up</a>
+            </span>
+        </div>
+    </div>
+
+
+
+    <div class="sidebar" id="sidebar">
+
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="gallery.html">Gallery</a>
+        <a href="contact.html">Contact</a>
+        <a href="wishlist.html">Wishlist</a>
+        <a href="cart.html">Cart</a>
+
+    </div>
+
+
+    <section class="hero-slider">
+
+        <div class="slides">
+
+            <!-- SLIDE 1 (YOUR CURRENT ONE) -->
+            <div class="slide active">
+
+                <div class="hero">
+
+                    <div class="hero-left">
+                        <h1>Crunchy.<br>Healthy.<br>Delicious.</h1>
+
+                        <p>
+                            Experience premium roasted makhana snacks packed with nutrition
+                            and bold flavors made for modern healthy lifestyles.
+                        </p>
+
+                        <div class="hero-buttons">
+                            <a href="product.html" class="btn-primary">Shop Now</a>
+                            <a href="#products" class="btn-secondary">Explore Flavours</a>
+                        </div>
+
+                    </div>
+
+                    <div class="hero-right">
+                        <img src="images/hero.jpeg">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- SLIDE 2 (IMAGE ONLY) -->
+            <div class="slide">
+
+                <div class="hero single-image">
+
+                    <img src="images/Slider 1.jpeg">
+
+                </div>
+
+            </div>
+
+
+            <!-- SLIDE 3 (IMAGE ONLY) -->
+            <div class="slide">
+
+                <div class="hero single-image">
+
+                    <img src="images/Slider 2.jpeg">
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ARROWS -->
+        <button class="slider-btn prev">&#10094;</button>
+        <button class="slider-btn next">&#10095;</button>
+
+    </section>
+
+
+
+    <section class="products" id="products">
+
+        <h2>Our Products</h2>
+
+        <div class="product-container">
+
+            <!-- PRODUCT 1 -->
+            <div class="card">
+
+                <button class="wishlist-btn" onclick="handleWishlist(this, {
+                id: 'p1',
+                name: 'Classic Roasted',
+                price: 199,
+                image: 'images/sticker1.jpeg'
+            })">♡</button>
+
+                <img src="images/sticker1.jpeg">
+
+                <h3>Classic Roasted</h3>
+                <p class="price">₹199</p>
+
+                <div class="card-buttons">
+                    <button class="view-btn">View</button>
+                    <button onclick="addToCart(this,'Classic Roasted',199,'images/sticker1.jpeg')">
+                        Add to Cart
+                    </button>
+                </div>
+
+                <div class="qty-box">
+                    <button onclick="decreaseQty(this)">-</button>
+                    <span>0</span>
+                    <button onclick="increaseQty(this)">+</button>
+                </div>
+
+            </div>
+
+            <!-- PRODUCT 2 -->
+            <div class="card">
+
+                <button class="wishlist-btn" onclick="handleWishlist(this, {
+                id: 'p2',
+                name: 'Black Pepper',
+                price: 219,
+                image: 'images/black.png'
+            })">♡</button>
+
+                <img src="images/black.png">
+
+                <h3>Black Pepper</h3>
+                <p class="price">₹219</p>
+
+                <div class="card-buttons">
+                    <button class="view-btn">View</button>
+                    <button onclick="addToCart(this,'Black Pepper',219,'images/black.png')">
+                        Add to Cart
+                    </button>
+                </div>
+
+                <div class="qty-box">
+                    <button onclick="decreaseQty(this)">-</button>
+                    <span>0</span>
+                    <button onclick="increaseQty(this)">+</button>
+                </div>
+
+            </div>
+
+            <!-- PRODUCT 3 -->
+            <div class="card">
+
+                <button class="wishlist-btn" onclick="handleWishlist(this, {
+                id: 'p3',
+                name: 'Peri Peri',
+                price: 229,
+                image: 'images/peri.png'
+            })">♡</button>
+
+                <img src="images/peri.png">
+
+                <h3>Peri Peri</h3>
+                <p class="price">₹229</p>
+
+                <div class="card-buttons">
+                    <button class="view-btn">View</button>
+                    <button onclick="addToCart(this,'Peri Peri',229,'images/peri.png')">
+                        Add to Cart
+                    </button>
+                </div>
+
+                <div class="qty-box">
+                    <button onclick="decreaseQty(this)">-</button>
+                    <span>0</span>
+                    <button onclick="increaseQty(this)">+</button>
+                </div>
+
+            </div>
+
+            <!-- PRODUCT 4 -->
+            <div class="card">
+
+                <button class="wishlist-btn" onclick="handleWishlist(this, {
+                id: 'p4',
+                name: 'Himalayan Salt',
+                price: 249,
+                image: 'images/salt.png'
+            })">♡</button>
+
+                <img src="images/salt.png">
+
+                <h3>Himalayan Salt</h3>
+                <p class="price">₹249</p>
+
+                <div class="card-buttons">
+                    <button class="view-btn">View</button>
+                    <button onclick="addToCart(this,'Himalayan Salt',249,'images/salt.png')">
+                        Add to Cart
+                    </button>
+                </div>
+
+                <div class="qty-box">
+                    <button onclick="decreaseQty(this)">-</button>
+                    <span>0</span>
+                    <button onclick="increaseQty(this)">+</button>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- WHY CHOOSE -->
+
+    <section class="why-us">
+
+        <h2>Why Choose Salted Soul</h2>
+
+        <div class="why-grid">
+
+            <div class="why-card">
+                <div class="icon">🌿</div>
+                <h3>100% Natural</h3>
+                <p>No artificial preservatives</p>
+            </div>
+
+            <div class="why-card">
+                <div class="icon">💪</div>
+                <h3>High Protein</h3>
+                <p>Healthy plant based snack</p>
+            </div>
+
+            <div class="why-card">
+                <div class="icon">🔥</div>
+                <h3>Roasted Not Fried</h3>
+                <p>Low fat & guilt free</p>
+            </div>
+
+            <div class="why-card">
+                <div class="icon">🚚</div>
+                <h3>Fast Delivery</h3>
+                <p>Delivered across India</p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- REVIEWS -->
+
+    <section class="reviews">
+
+        <h2>What Our Customers Say</h2>
+
+        <div class="review-grid">
+
+            <div class="review-card">
+                <div class="stars">★★★★★</div>
+                <p>Best healthy snack I’ve tried. Perfect crunch!</p>
+                <h4>Rahul</h4>
+            </div>
+
+            <div class="review-card">
+                <div class="stars">★★★★★</div>
+                <p>Great taste and very light. Much better than chips.</p>
+                <h4>Aditi</h4>
+            </div>
+
+            <div class="review-card">
+                <div class="stars">★★★★★</div>
+                <p>My favourite evening snack. Highly recommended.</p>
+                <h4>Neha</h4>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <footer>
+
+        <div class="footer-grid">
+
+            <div>
+                <h3>Salted Soul</h3>
+                <p>Premium roasted fox nuts crafted for healthy snacking.</p>
+            </div>
+
+            <div>
+                <h3>Quick Links</h3>
+                <p><a href="index.html">Home</a></p>
+                <p><a href="about.html">About</a></p>
+                <p><a href="gallery.html">Gallery</a></p>
+                <p><a href="contact.html">Contact</a></p>
+            </div>
+
+            <div>
+                <h3>Flavours</h3>
+                <p><a href="classic.html">Classic</a></p>
+                <p><a href="pepper.html">Black Pepper</a></p>
+                <p><a href="peri.html">Peri Peri</a></p>
+                <p><a href="himalayan.html">Himalayan Salt</a></p>
+            </div>
+
+            <div>
+                <h3>Contact</h3>
+                <p>📞 +91 8447273181</p>
+                <p>📞 +91 9310703571</p>
+                <p>✉️ jha84472731@gmail.com</p>
+            </div>
+
+        </div>
+
+        <p class="footer-bottom">
+            © 2025 Salted Soul. All Rights Reserved.
+        </p>
+
+    </footer>
+    <div id="toast" class="toast"></div>
+
+<!-- ======================= -->
+
+<script src="js/script.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const API_BASE = "http://10.17.110.176:5000/api/auth";
+
+    const usernameText = document.getElementById("usernameText");
+    const profileBox = document.getElementById("profileBox");
+    const dropdown = document.getElementById("profileDropdown");
+
+    let timeout;
+
+    // =======================
+    // ✅ CENTRAL AUTH CHECK (UPGRADED 🔥)
+    // =======================
+    async function checkAuth() {
+        try {
+            const res = await fetch(`${API_BASE}/check`, {
+                method: "GET",
+                credentials: "include"
+            });
+
+            if (!res.ok) return null;
+
+            const data = await res.json();
+
+            console.log("✅ Auth user:", data.user);
+
+            // ❌ Disable localStorage as source (kept but not used)
+            // localStorage.setItem("user", JSON.stringify(data.user));
+
+            return data.user;
+
+        } catch (err) {
+            console.error("Auth check failed:", err);
+            return null;
+        }
+    }
+
+    const user = await checkAuth();
+
+    // =======================
+    // ✅ USER DISPLAY
+    // =======================
+    if (user) {
+        if (usernameText) usernameText.innerText = user.name;
+    } else {
+        if (usernameText) usernameText.innerText = "Login";
+
+        if (profileBox) {
+            profileBox.onclick = () => window.location.href = "login.html";
+        }
+    }
+
+    // =======================
+    // ✅ DROPDOWN SAFE HANDLING
+    // =======================
+    if (profileBox && dropdown) {
+
+        profileBox.addEventListener("mouseenter", () => {
+            clearTimeout(timeout);
+            dropdown.style.display = "block";
+        });
+
+        profileBox.addEventListener("mouseleave", () => {
+            timeout = setTimeout(() => {
+                dropdown.style.display = "none";
+            }, 200);
+        });
+
+        profileBox.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dropdown.style.display = "block";
+        });
+
+        document.addEventListener("click", () => {
+            dropdown.style.display = "none";
+        });
+    }
+
+});
+
+
+// =======================
+// ✅ LOGOUT (UPGRADED 🔥)
+// =======================
+async function logout() {
+    try {
+        await fetch("http://10.17.110.176:5000/api/auth/logout", {
+            method: "POST",
+            credentials: "include"
+        });
+
+        // ❌ remove dependency
+        // localStorage.removeItem("user");
+
+        window.location.href = "login.html";
+
+    } catch (err) {
+        console.error("Logout failed:", err);
+    }
+}
+</script>
+
+</body>
+
+</html>
