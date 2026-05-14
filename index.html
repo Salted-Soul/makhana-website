@@ -417,7 +417,7 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    const API_BASE = "http://10.17.110.176:5000/api/auth";
+    const API_BASE = "http://https://makhana-website.onrender.com/api/auth";
 
     const usernameText = document.getElementById("usernameText");
     const profileBox = document.getElementById("profileBox");
@@ -501,7 +501,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // =======================
 async function logout() {
     try {
-        await fetch("http://10.17.110.176:5000/api/auth/logout", {
+        await fetch("http://https://makhana-website.onrender.com/api/auth/logout", {
             method: "POST",
             credentials: "include"
         });

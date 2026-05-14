@@ -57,7 +57,7 @@ async function loadStats() {
     try {
         showLoading(statsBox);
 
-        const data = await safeFetch("http://10.17.110.176:5000/api/admin/stats");
+        const data = await safeFetch("http://https://makhana-website.onrender.com/api/admin/stats");
 
         if (!data.success) {
             errorBox.innerText = data.message;
@@ -87,7 +87,7 @@ async function loadUsers() {
     try {
         showLoading(usersBox);
 
-        const data = await safeFetch("http://10.17.110.176:5000/api/admin/users");
+        const data = await safeFetch("http://https://makhana-website.onrender.com/api/admin/users");
 
         if (!data.success) return;
 
@@ -125,7 +125,7 @@ async function loadOrders() {
     try {
         showLoading(ordersBox);
 
-        const data = await safeFetch("http://10.17.110.176:5000/api/admin/orders");
+        const data = await safeFetch("http://https://makhana-website.onrender.com/api/admin/orders");
 
         if (!data.success) return;
 
@@ -181,7 +181,7 @@ function renderOrders() {
 async function updateStatus(orderId, status) {
     try {
         await safeFetch(
-            `http://10.17.110.176:5000/api/admin/order/${orderId}/status`,
+            `http://https://makhana-website.onrender.com/api/admin/order/${orderId}/status`,
             {
                 method: "PUT",
                 body: JSON.stringify({ status })

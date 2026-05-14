@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // =======================
 // GLOBAL CONFIG
 // =======================
-const API_BASE = "http://10.17.110.176:5000/api/auth";
+const API_BASE = "http://https://makhana-website.onrender.com/api/auth";
 
 
 // =======================

@@ -119,7 +119,7 @@ function debounce(fn, delay = 300){
 // =========================
 async function getCurrentUser() {
     try {
-        const res = await fetch("http://10.17.110.176:5000/api/auth/check", {
+        const res = await fetch("http://https://makhana-website.onrender.com/api/auth/check", {
             credentials: "include"
         });
 
@@ -229,7 +229,7 @@ const userSection = document.getElementById("userSection");
 // LOGOUT
 // =========================
 async function logout() {
-    await fetch("http://10.17.110.176:5000/api/auth/logout", {
+    await fetch("http://https://makhana-website.onrender.com/api/auth/logout", {
         method: "POST",
         credentials: "include"
     });
@@ -260,7 +260,7 @@ async function addToCart(btn, name, price, image) {
         return;
     }
 
-    const { ok, data } = await safeFetch("http://10.17.110.176:5000/api/cart/add", {
+    const { ok, data } = await safeFetch("http://https://makhana-website.onrender.com/api/cart/add", {
         method: "POST",
         body: JSON.stringify({
             name: escapeHTML(name),
@@ -314,7 +314,7 @@ async function loadCartPage() {
         return;
     }
 
-    const { ok, data } = await safeFetch(`http://10.17.110.176:5000/api/cart/${user._id}`);
+    const { ok, data } = await safeFetch(`http://https://makhana-website.onrender.com/api/cart/${user._id}`);
 
     if (!ok) {
         container.innerHTML = "Failed to load cart ❌";
@@ -358,7 +358,7 @@ async function updateCart(name, action) {
     const user = await getCachedUser();
     if (!user) return;
 
-    await safeFetch("http://10.17.110.176:5000/api/cart/update", {
+    await safeFetch("http://https://makhana-website.onrender.com/api/cart/update", {
         method: "POST",
         body: JSON.stringify({ name, action })
     });
@@ -375,7 +375,7 @@ async function loadCartCount() {
     const user = await getCachedUser();
     if (!user) return;
 
-    const { ok, data } = await safeFetch(`http://10.17.110.176:5000/api/cart/count/${user._id}`);
+    const { ok, data } = await safeFetch(`http://https://makhana-website.onrender.com/api/cart/count/${user._id}`);
 
     if (ok) {
         const cartIcon = document.getElementById("cartCount");

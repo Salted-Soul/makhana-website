@@ -2,7 +2,7 @@
 // 🔥 PRODUCTION SAFE CHECKOUT
 // =======================
 
-const API = "http://10.17.110.176:5000/api";
+const API = "http://https://makhana-website.onrender.com/api";
 
 const STATE = {
     finalAmount: 0,
