@@ -1,75 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
 
-<title>Order Placed | Salted Soul</title>
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+/>
 
-<link rel="stylesheet" href="css/style.css">
+<title>
+    Order Confirmed | Salted Soul
+</title>
+
+<link
+    rel="stylesheet"
+    href="css/style.css"
+/>
 
 <style>
 
+/* ======================================
+GLOBAL
+====================================== */
+body{
+
+margin:0;
+padding:0;
+
+font-family:
+Arial,
+sans-serif;
+
+background:
+linear-gradient(
+135deg,
+#f5f5f5,
+#ffffff
+);
+
+color:#222;
+}
+
+
+/* ======================================
+LAYOUT
+====================================== */
 .success-container{
-height:80vh;
+
+min-height:100vh;
+
 display:flex;
-flex-direction:column;
+
 justify-content:center;
+
 align-items:center;
-text-align:center;
+
 padding:20px;
 }
 
+
+/* ======================================
+CARD
+====================================== */
 .success-box{
-background:white;
-padding:40px;
-border-radius:12px;
-box-shadow:0 5px 20px rgba(0,0,0,0.1);
-max-width:500px;
+
+background:#fff;
+
 width:100%;
+
+max-width:520px;
+
+padding:40px;
+
+border-radius:20px;
+
+box-shadow:
+0 10px 35px rgba(0,0,0,0.08);
+
+text-align:center;
+
+animation:fadeIn 0.5s ease;
 }
 
+
+/* ======================================
+ICON
+====================================== */
 .success-icon{
-font-size:60px;
-color:#2e7d32;
+
+font-size:70px;
+
 margin-bottom:20px;
+
+color:#2e7d32;
 }
 
-.success-box h2{
-margin-bottom:10px;
+
+/* ======================================
+TEXT
+====================================== */
+.success-box h1{
+
+margin:0 0 10px;
+
+font-size:32px;
 }
 
 .success-box p{
+
 color:#555;
-margin-bottom:20px;
+
+line-height:1.6;
 }
 
-.order-id{
+
+/* ======================================
+ORDER INFO
+====================================== */
+.order-section{
+
+margin-top:25px;
+
+padding:18px;
+
+background:#f9f9f9;
+
+border-radius:12px;
+
+text-align:left;
+}
+
+.order-row{
+
+display:flex;
+
+justify-content:space-between;
+
+margin-bottom:10px;
+
+font-size:15px;
+}
+
+.order-label{
+
 font-weight:600;
-margin-bottom:20px;
-word-break: break-all;
 }
 
-.home-btn{
-padding:12px 25px;
-background:#2e7d32;
-color:white;
+.order-value{
+
+word-break:break-word;
+
+max-width:60%;
+}
+
+
+/* ======================================
+STATUS
+====================================== */
+.status{
+
+margin-top:20px;
+
+font-size:14px;
+
+font-weight:500;
+
+color:#666;
+}
+
+
+/* ======================================
+BUTTONS
+====================================== */
+.button-group{
+
+margin-top:30px;
+
+display:flex;
+
+gap:12px;
+
+flex-wrap:wrap;
+
+justify-content:center;
+}
+
+.btn{
+
+padding:12px 22px;
+
 border:none;
-border-radius:6px;
+
+border-radius:10px;
+
 cursor:pointer;
-margin-top:10px;
+
+font-size:15px;
+
+font-weight:600;
+
+transition:0.3s;
 }
 
-.home-btn:hover{
+.btn-primary{
+
+background:#2e7d32;
+
+color:#fff;
+}
+
+.btn-primary:hover{
+
 background:#1b5e20;
 }
 
-/* 🔥 NEW */
+.btn-secondary{
+
+background:#eee;
+
+color:#222;
+}
+
+.btn-secondary:hover{
+
+background:#ddd;
+}
+
+
+/* ======================================
+LOADER
+====================================== */
 .loader{
-margin-top:10px;
-color:#777;
-font-size:14px;
+
+width:22px;
+height:22px;
+
+border:3px solid #ddd;
+
+border-top:3px solid #2e7d32;
+
+border-radius:50%;
+
+margin:15px auto;
+
+animation:spin 0.8s linear infinite;
+}
+
+
+/* ======================================
+ANIMATIONS
+====================================== */
+@keyframes spin{
+
+100%{
+transform:rotate(360deg);
+}
+}
+
+@keyframes fadeIn{
+
+from{
+opacity:0;
+transform:translateY(20px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+
+/* ======================================
+RESPONSIVE
+====================================== */
+@media(max-width:600px){
+
+.success-box{
+
+padding:28px;
+}
+
+.success-box h1{
+
+font-size:26px;
+}
+
+.order-row{
+
+flex-direction:column;
+
+gap:4px;
+}
 }
 
 </style>
@@ -82,50 +306,323 @@ font-size:14px;
 
 <div class="success-box">
 
-<div class="success-icon">✔</div>
+<div class="success-icon">
+    ✔
+</div>
 
-<h2>Order Placed Successfully!</h2>
+<h1>
+    Order Confirmed
+</h1>
 
-<p>Thank you for shopping with Salted Soul.</p>
+<p>
+    Thank you for shopping with
+    <strong>Salted Soul</strong>.
+</p>
 
-<p class="order-id">Payment ID: <span id="orderId">Loading...</span></p>
+<div
+    class="loader"
+    id="loader"
+></div>
 
-<div class="loader" id="statusText">Verifying your order...</div>
+<div
+    class="status"
+    id="statusText"
+>
+    Verifying your order...
+</div>
 
-<button class="home-btn" onclick="goHome()">Go to Home</button>
+
+<!-- ======================================
+ORDER DETAILS
+====================================== -->
+<div
+    class="order-section"
+    id="orderSection"
+    style="display:none;"
+>
+
+<div class="order-row">
+
+<span class="order-label">
+Order ID
+</span>
+
+<span
+    class="order-value"
+    id="orderId"
+>
+Loading...
+</span>
+
+</div>
+
+
+<div class="order-row">
+
+<span class="order-label">
+Payment Status
+</span>
+
+<span
+    class="order-value"
+    id="paymentStatus"
+>
+Paid
+</span>
+
+</div>
+
+
+<div class="order-row">
+
+<span class="order-label">
+Order Status
+</span>
+
+<span
+    class="order-value"
+    id="orderStatus"
+>
+Processing
+</span>
 
 </div>
 
 </div>
+
+
+<!-- ======================================
+BUTTONS
+====================================== -->
+<div class="button-group">
+
+<button
+    class="btn btn-primary"
+    onclick="goHome()"
+>
+Go to Home
+</button>
+
+<button
+    class="btn btn-secondary"
+    onclick="goOrders()"
+>
+View Orders
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ======================================
+API CONFIG
+====================================== -->
+<script src="js/api.js"></script>
+
 
 <script>
 
-// ==============================
-// GET PAYMENT ID
-// ==============================
-const params = new URLSearchParams(window.location.search);
-const orderId = params.get("orderId");
+// ======================================
+// DEBUG
+// ======================================
+const DEBUG =
+window.location.hostname ===
+"localhost";
 
-const statusText = document.getElementById("statusText");
 
-if(orderId){
-document.getElementById("orderId").innerText = orderId;
+// ======================================
+// LOGGER
+// ======================================
+function log(...args){
 
-// ✅ Simulate success message
-setTimeout(()=>{
-statusText.innerText = "Order confirmed & saved successfully ✅";
-statusText.style.color = "green";
-},1500);
+if(DEBUG){
 
-}else{
-document.getElementById("orderId").innerText = "Not Available";
-statusText.innerText = "Something went wrong ⚠️";
-statusText.style.color = "red";
+console.log(...args);
+}
 }
 
+
+// ======================================
+// SAFE DOM
+// ======================================
+function el(id){
+
+return document.getElementById(id);
+}
+
+
+// ======================================
+// QUERY PARAMS
+// ======================================
+const params =
+new URLSearchParams(
+window.location.search
+);
+
+
+const orderId =
+params.get("orderId");
+
+
+// ======================================
+// REDIRECTS
+// ======================================
 function goHome(){
-window.location.href = "index.html";
+
+window.location.href =
+"index.html";
 }
+
+
+function goOrders(){
+
+window.location.href =
+"orders.html";
+}
+
+
+// ======================================
+// SHOW ERROR
+// ======================================
+function showError(message){
+
+el("loader").style.display =
+"none";
+
+el("statusText").innerText =
+message;
+
+el("statusText").style.color =
+"red";
+}
+
+
+// ======================================
+// SHOW SUCCESS
+// ======================================
+function showSuccess(order){
+
+el("loader").style.display =
+"none";
+
+el("statusText").innerText =
+"Order verified successfully ✅";
+
+el("statusText").style.color =
+"green";
+
+
+el("orderSection").style.display =
+"block";
+
+
+el("orderId").innerText =
+
+order._id ||
+
+order.orderId ||
+
+"Not Available";
+
+
+el("paymentStatus").innerText =
+
+order.paymentStatus ||
+
+"Paid";
+
+
+el("orderStatus").innerText =
+
+order.status ||
+
+"Processing";
+}
+
+
+// ======================================
+// VERIFY ORDER
+// ======================================
+async function verifyOrder(){
+
+try{
+
+if(!orderId){
+
+return showError(
+"Invalid order reference"
+);
+}
+
+
+log(
+"🔍 Verifying order:",
+orderId
+);
+
+
+// ======================================
+// FETCH ORDER
+// ======================================
+const response =
+await API.get(
+`/order/${orderId}`
+);
+
+
+if(
+!response.success
+){
+
+throw new Error(
+
+response.message ||
+
+"Order verification failed"
+);
+}
+
+
+showSuccess(
+response.order
+);
+
+}catch(error){
+
+console.error(
+"❌ Verification failed:",
+error
+);
+
+showError(
+
+error.message ||
+
+"Unable to verify order"
+);
+}
+}
+
+
+// ======================================
+// INIT
+// ======================================
+document.addEventListener(
+
+"DOMContentLoaded",
+
+() => {
+
+verifyOrder();
+
+console.log(
+"✅ Success Page Ready"
+);
+}
+);
 
 </script>
 

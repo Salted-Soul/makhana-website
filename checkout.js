@@ -1,707 +1,963 @@
-// =======================
-// 🔥 PRODUCTION SAFE CHECKOUT
-// =======================
+// ======================================
+// CHECKOUT STATE
+// ======================================
+const CHECKOUT_STATE = {
 
-const API = "http://https://makhana-website.onrender.com/api";
-
-const STATE = {
-    finalAmount: 0,
     loading: false,
-    selectedPaymentMode: "upi",
-    razorpayInstance: null
+
+    finalAmount: 0,
+
+    razorpayInstance: null,
+
+    user: null
 };
 
-const DEBUG = true;
+
+// ======================================
+// DEBUG
+// ======================================
+const DEBUG =
+    true;
 
 
-// =======================
-// SAFE DOM
-// =======================
-function el(id){
-    return document.getElementById(id);
-}
-
-function safeText(element, value){
-    if(element){
-        element.innerText = value;
-    }
-}
-
-
-// =======================
+// ======================================
 // LOGGER
-// =======================
-function log(...args){
-    if(DEBUG){
+// ======================================
+function log(...args) {
+
+    if (DEBUG) {
+
         console.log(...args);
     }
 }
 
 
-// =======================
-// NOTIFIER
-// =======================
-function notify(message){
-    if(typeof showToast === "function"){
-        showToast(message);
-    }else{
+// ======================================
+// SAFE DOM
+// ======================================
+function el(id) {
+
+    return document.getElementById(id);
+}
+
+
+// ======================================
+// SAFE TEXT
+// ======================================
+function safeText(
+    element,
+    value
+) {
+
+    if (element) {
+
+        element.innerText =
+            value;
+    }
+}
+
+
+// ======================================
+// TOAST
+// ======================================
+function notify(
+    message,
+    type = "info"
+) {
+
+    if (
+        typeof showToast ===
+        "function"
+    ) {
+
+        showToast(
+            message,
+            type
+        );
+
+    } else {
+
+        console.log(
+            `${type.toUpperCase()}: ${message}`
+        );
+
         alert(message);
     }
 }
 
 
-// =======================
-// SAFE TOKEN
-// =======================
-function getToken(){
-    return (
-        localStorage.getItem("token") ||
-        sessionStorage.getItem("token") ||
-        ""
-    );
-}
-
-
-// =======================
-// SAFE FETCH
-// =======================
-async function safeFetch(url, options = {}){
-
-    try{
-
-        const token = getToken();
-
-        const response = await fetch(url, {
-            credentials: "include",
-
-            headers: {
-                "Content-Type": "application/json",
-
-                ...(token && {
-                    Authorization: `Bearer ${token}`
-                }),
-
-                ...(options.headers || {})
-            },
-
-            ...options
-        });
-
-        let data = {};
-
-        try{
-            data = await response.json();
-        }catch(err){}
-
-        return {
-            ok: response.ok,
-            status: response.status,
-            data
-        };
-
-    }catch(error){
-
-        console.error("FETCH ERROR:", error);
-
-        return {
-            ok: false,
-            status: 500,
-            data: {
-                success: false,
-                message: "Network error"
-            }
-        };
-    }
-}
-
-
-// =======================
+// ======================================
 // VALIDATION
-// =======================
-function validate(name, phone, address){
+// ======================================
+function validateCheckout({
 
-    if(!name || !phone || !address){
-        return "All fields required";
+    name,
+
+    phone,
+
+    address
+
+}) {
+
+    if (
+        !name ||
+        !phone ||
+        !address
+    ) {
+
+        return "All fields are required";
     }
 
-    if(!/^[0-9]{10}$/.test(phone)){
+
+    if (
+        !/^[0-9]{10}$/.test(phone)
+    ) {
+
         return "Invalid phone number";
     }
+
+
+    if (
+        address.length < 10
+    ) {
+
+        return "Address too short";
+    }
+
 
     return null;
 }
 
 
-// =======================
-// AUTHENTICATED USER
-// =======================
-async function getUser(){
+// ======================================
+// BUTTON CONTROL
+// ======================================
+function setLoading(
+    loading
+) {
 
-    try{
+    CHECKOUT_STATE.loading =
+        loading;
 
-        const result = await safeFetch(API + "/auth/check");
+    const btn =
+        el("checkoutBtn");
 
-        if(!result.ok){
-            return null;
+
+    if (!btn) return;
+
+
+    btn.disabled =
+        loading;
+
+    btn.innerText =
+        loading
+            ? "Processing..."
+            : "Place Order";
+}
+
+
+// ======================================
+// GET USER
+// ======================================
+async function getUser() {
+
+    try {
+
+        const response =
+            await API.auth.check();
+
+
+        console.log(
+            "👤 USER RESPONSE:",
+            response
+        );
+
+
+        if (
+            response.success &&
+            response.user
+        ) {
+
+            CHECKOUT_STATE.user =
+                response.user;
+
+            return response.user;
         }
 
-        return result.data.user || null;
 
-    }catch(error){
+        return null;
 
-        console.error("USER FETCH ERROR:", error);
+    } catch (err) {
+
+        console.error(
+            "❌ User fetch failed:",
+            err
+        );
 
         return null;
     }
 }
 
 
-// =======================
+// ======================================
 // LOAD CART SUMMARY
-// =======================
-async function loadSummary(){
+// ======================================
+async function loadSummary() {
 
-    try{
+    try {
 
-        const user = await getUser();
+        const user =
+            await getUser();
 
-        if(!user){
 
-            notify("Please login first");
+        if (!user) {
 
-            window.location.href = "login.html";
+            notify(
+                "Please login first"
+            );
 
-            return;
+            return setTimeout(() => {
+
+                window.location.href =
+                    "login.html";
+
+            }, 1000);
         }
 
-        const result = await safeFetch(
-            API + "/cart/" + user._id
+
+        // ======================================
+        // FIXED ROUTE
+        // ======================================
+        const response =
+            await API.get(
+                "/cart"
+            );
+
+
+        console.log(
+            "🛒 CART RESPONSE:",
+            response
         );
 
-        if(!result.ok){
+
+        if (
+            !response.success
+        ) {
 
             throw new Error(
-                result.data.message || "Cart fetch failed"
+
+                response.message ||
+
+                "Failed to load cart"
             );
         }
 
+
+        // ======================================
+        // SAFE ITEMS
+        // ======================================
         const items =
-            result.data.items ||
-            result.data.cart?.items ||
+            response.items ||
+
+            response.cart?.items ||
+
             [];
 
-        const container = el("order-items");
 
-        if(!container){
+        const container =
+            el("order-items");
+
+
+        if (!container) {
+
+            console.warn(
+                "⚠ order-items container missing"
+            );
+
             return;
         }
 
-        container.innerHTML = "";
+
+        container.innerHTML =
+            "";
+
+
+        // ======================================
+        // EMPTY CART
+        // ======================================
+        if (
+            !items.length
+        ) {
+
+            container.innerHTML = `
+
+                <h3>
+                    Cart Empty 😢
+                </h3>
+            `;
+
+            safeText(
+                el("final-total"),
+                "₹0"
+            );
+
+            return;
+        }
+
 
         let total = 0;
 
-        if(items.length === 0){
-
-            container.innerHTML =
-            "<h3>Cart Empty 😢</h3>";
-
-            return;
-        }
 
         items.forEach(item => {
 
+            const qty =
+                Number(item.quantity) || 1;
+
+            const price =
+                Number(item.price) || 0;
+
             const itemTotal =
-                (item.price || 0) *
-                (item.quantity || 0);
+                qty * price;
 
             total += itemTotal;
 
-            container.innerHTML += `
-                <div class="item-row">
-                    <span>
-                        ${item.name} × ${item.quantity}
-                    </span>
 
-                    <span>
-                        ₹${itemTotal}
-                    </span>
-                </div>
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+            row.className =
+                "item-row";
+
+
+            row.innerHTML = `
+
+                <span>
+                    ${item.name} × ${qty}
+                </span>
+
+                <span>
+                    ₹${itemTotal}
+                </span>
             `;
+
+
+            container.appendChild(
+                row
+            );
         });
 
-        STATE.finalAmount = total;
+
+        CHECKOUT_STATE.finalAmount =
+            total;
+
 
         safeText(
+
             el("final-total"),
+
             `₹${total}`
         );
 
-    }catch(error){
 
-        console.error("LOAD SUMMARY ERROR:", error);
+        log(
+            "🛒 Total:",
+            total
+        );
 
-        notify("Failed to load cart ❌");
+    } catch (err) {
+
+        console.error(
+            "❌ Summary load failed:",
+            err
+        );
+
+        notify(
+            "Failed to load cart"
+        );
     }
 }
 
 
-// =======================
-// UPI
-// =======================
-function getUpiInput(){
+// ======================================
+// CREATE COD ORDER
+// ======================================
+async function createCODOrder({
 
-    return (
-        el("upiId")?.value.trim() ||
-        "success@razorpay"
+    name,
+
+    phone,
+
+    address
+
+}) {
+
+    try {
+
+        const response =
+            await API.post(
+
+                "/order/place",
+
+                {
+
+                    name,
+
+                    phone,
+
+                    address,
+
+                    paymentMethod:
+                        "COD"
+                }
+            );
+
+
+        if (
+            !response.success
+        ) {
+
+            throw new Error(
+
+                response.message ||
+
+                "COD order failed"
+            );
+        }
+
+
+        await API.post(
+            "/cart/clear"
+        );
+
+
+        notify(
+            "Order placed successfully",
+            "success"
+        );
+
+
+        setLoading(false);
+
+
+        setTimeout(() => {
+
+            window.location.href =
+
+                `order-success.html?orderId=${response.orderId || response.order?._id}`;
+
+        }, 1000);
+
+    } catch (err) {
+
+        console.error(
+            "❌ COD ERROR:",
+            err
+        );
+
+        notify(
+            err.message ||
+            "COD failed"
+        );
+
+        setLoading(false);
+    }
+}
+
+
+// ======================================
+// VERIFY PAYMENT
+// ======================================
+async function verifyPayment({
+
+    razorpay_order_id,
+
+    razorpay_payment_id,
+
+    razorpay_signature,
+
+    customer
+}) {
+
+    return await API.post(
+
+        "/payment/verify",
+
+        {
+
+            razorpay_order_id,
+
+            razorpay_payment_id,
+
+            razorpay_signature,
+
+            ...customer
+        }
     );
 }
 
 
-// =======================
-// RESET
-// =======================
-function resetBtn(){
+// ======================================
+// CREATE PAYMENT ORDER
+// ======================================
+async function createPaymentOrder() {
 
-    const btn = el("checkoutBtn");
-
-    if(btn){
-
-        btn.disabled = false;
-
-        btn.innerText = "Place Order";
-    }
-
-    STATE.loading = false;
-
-    STATE.razorpayInstance = null;
+    return await API.post(
+        "/payment/create-order"
+    );
 }
 
 
-// =======================
-// COD ORDER
-// =======================
-async function createCODOrder({
-    name,
-    phone,
-    address
-}){
+// ======================================
+// BUILD RAZORPAY OPTIONS
+// ======================================
 
-    try{
-
-        const result = await safeFetch(
-            API + "/order/place",
-            {
-                method: "POST",
-
-                body: JSON.stringify({
-                    name,
-                    phone,
-                    address
-                })
-            }
-        );
-
-        console.log("COD RESPONSE:", result);
-
-        if(!result.ok){
-
-            throw new Error(
-                result.data.message ||
-                "Order failed"
-            );
-        }
-
-        await safeFetch(
-            API + "/cart/clear",
-            {
-                method: "POST"
-            }
-        );
-
-        window.location.href =
-        `order-success.html?orderId=${
-            result.data.orderId
-        }`;
-
-    }catch(error){
-
-        console.error(
-            "COD ORDER ERROR:",
-            error
-        );
-
-        notify(
-            error.message ||
-            "Order failed ❌"
-        );
-
-        resetBtn();
-    }
-}
-
-
-// =======================
-// RAZORPAY OPTIONS
-// =======================
 function buildRazorpayOptions({
-    data,
-    name,
-    phone,
-    upiId,
-    status
-}){
+
+    paymentData,
+
+    customer
+
+}) {
 
     return {
 
-        key: data.key,
+        key:
+            paymentData.key,
 
-        amount: data.amount * 100,
+        amount:
+            paymentData.order.amount,
 
-        currency: "INR",
+        currency:
+            "INR",
 
-        name: "Salted Soul",
+        name:
+            "Salted Soul",
 
-        description: "Secure Payment",
+        description:
+            "Premium Healthy Snacks",
 
-        order_id: data.orderId,
+        image:
+            "images/logo.jpeg",
 
-        method: {
-    upi: true,
-    card: true,
-    netbanking: true,
-    wallet: true
-},
+        order_id:
+            paymentData.order.id,
 
-upi: {
-    flow: "intent"
-},
 
-config: {
-    display: {
-
-        blocks: {
-
-            upi: {
-                name: "UPI Payment",
-                instruments: [
-                    {
-                        method: "upi"
-                    }
-                ]
-            },
-
-            cards: {
-                name: "Cards",
-                instruments: [
-                    {
-                        method: "card"
-                    }
-                ]
-            },
-
-            netbanking: {
-                name: "Net Banking",
-                instruments: [
-                    {
-                        method: "netbanking"
-                    }
-                ]
-            },
-
-            wallets: {
-                name: "Wallets",
-                instruments: [
-                    {
-                        method: "wallet"
-                    }
-                ]
-            }
-        },
-
-        sequence: [
-            "block.upi",
-            "block.cards",
-            "block.netbanking",
-            "block.wallets"
-        ],
-
-        preferences: {
-            show_default_blocks: false
-        }
-    }
-},
+        // ======================================
+        // CUSTOMER PREFILL
+        // ======================================
         prefill: {
-            name,
-            contact: phone,
-            email: "support@saltedsoul.com"
+
+            name:
+                customer.name,
+
+            contact:
+                customer.phone,
+
+            email:
+                CHECKOUT_STATE.user?.email || ""
         },
 
+
+        // ======================================
+        // NOTES
+        // ======================================
         notes: {
-            upi: upiId
+
+            customerName:
+                customer.name
         },
 
-        handler: async function(response){
 
-            try{
+        // ======================================
+        // THEME
+        // ======================================
+        theme: {
 
-                if(status){
-                    status.innerText =
-                    "Verifying payment...";
-                }
+            color: "#2e7d32"
+        },
 
-                const verifyResult =
-                await safeFetch(
-                    API + "/order/verify",
-                    {
-                        method: "POST",
 
-                        body: JSON.stringify({
+        // ======================================
+        // ENABLE ALL PAYMENT METHODS
+        // ======================================
+        method: {
 
-                            ...response,
+            upi: true,
 
-                            name,
-                            phone,
+            card: true,
 
-                            address:
-                            el("address")?.value.trim()
-                        })
-                    }
+            netbanking: true,
+
+            wallet: true,
+
+            emi: true,
+
+            paylater: true
+        },
+
+
+        // ======================================
+        // UPI SETTINGS
+        // ======================================
+        upi: {
+
+            flow: "collect"
+        },
+
+
+        // ======================================
+        // PAYMENT SUCCESS
+        // ======================================
+        handler: async function(
+            response
+        ) {
+
+            try {
+
+                notify(
+                    "Verifying payment..."
                 );
 
-                if(!verifyResult.ok){
+
+                const verifyResult =
+
+                    await verifyPayment({
+
+                        ...response,
+
+                        customer
+                    });
+
+
+                if (
+                    !verifyResult.success
+                ) {
 
                     throw new Error(
-                        verifyResult.data.message ||
+
+                        verifyResult.message ||
+
                         "Verification failed"
                     );
                 }
 
-                await safeFetch(
-                    API + "/cart/clear",
-                    {
-                        method: "POST"
-                    }
+
+                await API.post(
+                    "/cart/clear"
                 );
 
-                window.location.href =
-                `order-success.html?orderId=${
-                    verifyResult.data.orderId
-                }`;
 
-            }catch(error){
+                notify(
+                    "Payment successful ✅",
+                    "success"
+                );
+
+
+                setTimeout(() => {
+
+                    window.location.href =
+
+                        `order-success.html?orderId=${verifyResult.order?._id || verifyResult.orderId}`;
+
+                }, 1200);
+
+            } catch (err) {
 
                 console.error(
-                    "VERIFY ERROR:",
-                    error
+                    "❌ VERIFY ERROR:",
+                    err
                 );
 
                 notify(
-                    error.message ||
+                    err.message ||
                     "Payment verification failed"
                 );
 
-                resetBtn();
+                setLoading(false);
             }
         },
 
+
+        // ======================================
+        // MODAL CLOSE
+        // ======================================
         modal: {
 
-            ondismiss: function(){
+            ondismiss: function() {
 
-                log("Razorpay closed");
+                log(
+                    "⚠ Razorpay closed"
+                );
 
-                resetBtn();
+                notify(
+                    "Payment cancelled"
+                );
 
-                if(status){
-                    status.innerText =
-                    "Payment cancelled";
-                }
+                setLoading(false);
             }
-        },
-
-        theme: {
-            color: "#2e7d32"
         }
     };
 }
+// ======================================
+// ONLINE PAYMENT FLOW
+// ======================================
+async function handleOnlinePayment(
+    customer
+) {
 
+    try {
 
-// =======================
-// MAIN FLOW
-// =======================
-async function placeOrder(){
-
-    if(STATE.loading){
-
-        log("Duplicate click blocked");
-
-        return;
-    }
-
-    STATE.loading = true;
-
-    const btn = el("checkoutBtn");
-
-    const status = el("statusText");
-
-    if(btn){
-
-        btn.disabled = true;
-
-        btn.innerText = "Processing...";
-    }
-
-    try{
-
-        const name =
-            el("name")?.value.trim();
-
-        const phone =
-            el("phone")?.value.trim();
-
-        const address =
-            el("address")?.value.trim();
-
-        const payment =
-            el("payment")?.value;
-
-        const validationError =
-            validate(
-                name,
-                phone,
-                address
-            );
-
-        if(validationError){
-
-            notify(validationError);
-
-            return resetBtn();
-        }
-
-        // ===================
-        // COD FLOW
-        // ===================
-        if(payment === "cod"){
-
-            return await createCODOrder({
-                name,
-                phone,
-                address
-            });
-        }
-
-        // ===================
-        // ONLINE PAYMENT
-        // ===================
-        if(typeof Razorpay === "undefined"){
-
-            notify(
-                "Razorpay SDK failed to load"
-            );
-
-            return resetBtn();
-        }
-
-        if(status){
-
-            status.innerText =
-            "Opening secure payment...";
-        }
-
-        const orderResult =
-        await safeFetch(
-            API + "/order/create-order",
-            {
-                method: "POST"
-            }
-        );
-
-        if(!orderResult.ok){
+        if (
+            typeof Razorpay ===
+            "undefined"
+        ) {
 
             throw new Error(
-                orderResult.data.message ||
+                "Razorpay SDK failed to load"
+            );
+        }
+
+
+        if (
+            CHECKOUT_STATE.finalAmount <= 0
+        ) {
+
+            throw new Error(
+                "Cart total is invalid"
+            );
+        }
+
+
+        const paymentData =
+            await createPaymentOrder();
+
+
+        console.log(
+            "💳 PAYMENT DATA:",
+            paymentData
+        );
+
+
+        if (
+            !paymentData.success
+        ) {
+
+            throw new Error(
+
+                paymentData.message ||
+
                 "Failed to create payment order"
             );
         }
 
+
         const options =
-        buildRazorpayOptions({
+            buildRazorpayOptions({
 
-            data: orderResult.data,
+                paymentData,
 
-            name,
+                customer
+            });
 
-            phone,
 
-            upiId: getUpiInput(),
+        const rzp =
+            new Razorpay(options);
 
-            status
-        });
 
-        console.log(
-            "RAZORPAY OPTIONS:",
-            options
-        );
+        CHECKOUT_STATE.razorpayInstance =
+            rzp;
 
-        const rzp = new Razorpay(options);
-
-        STATE.razorpayInstance = rzp;
 
         rzp.on(
+
             "payment.failed",
-            function(response){
+
+            function(response) {
 
                 console.error(
-                    "PAYMENT FAILED:",
+
+                    "❌ PAYMENT FAILED:",
+
                     response
                 );
 
                 notify(
-                    response.error?.description ||
-                    "Payment failed ❌"
+
+                    response.error
+                        ?.description ||
+
+                    "Payment failed"
                 );
 
-                resetBtn();
+                setLoading(false);
             }
         );
 
+
         rzp.open();
 
-    }catch(error){
+    } catch (err) {
 
         console.error(
-            "PLACE ORDER ERROR:",
-            error
+            "❌ ONLINE PAYMENT ERROR:",
+            err
         );
 
         notify(
-            error.message ||
-            "Checkout failed ❌"
+            err.message ||
+            "Payment failed"
         );
 
-        resetBtn();
+        setLoading(false);
     }
 }
 
 
-// =======================
+// ======================================
+// MAIN CHECKOUT FLOW
+// ======================================
+async function placeOrder() {
+
+    if (
+        CHECKOUT_STATE.loading
+    ) {
+
+        log(
+            "⚠ Duplicate click blocked"
+        );
+
+        return;
+    }
+
+
+    setLoading(true);
+
+
+    try {
+
+        const customer = {
+
+            name:
+                el("name")
+                    ?.value
+                    ?.trim(),
+
+            phone:
+                el("phone")
+                    ?.value
+                    ?.trim(),
+
+            address:
+                el("address")
+                    ?.value
+                    ?.trim()
+        };
+
+
+        const paymentMethod =
+            el("payment")
+                ?.value || "online";
+
+
+        const validationError =
+
+            validateCheckout(
+                customer
+            );
+
+
+        if (validationError) {
+
+            notify(
+                validationError
+            );
+
+            return setLoading(false);
+        }
+
+
+        // COD
+        if (
+            paymentMethod === "cod"
+        ) {
+
+            return await createCODOrder(
+                customer
+            );
+        }
+
+
+        // ONLINE
+        await handleOnlinePayment(
+            customer
+        );
+
+    } catch (err) {
+
+        console.error(
+            "❌ CHECKOUT ERROR:",
+            err
+        );
+
+        notify(
+            err.message ||
+            "Checkout failed"
+        );
+
+        setLoading(false);
+    }
+}
+
+
+// ======================================
 // INIT
-// =======================
+// ======================================
 document.addEventListener(
+
     "DOMContentLoaded",
-    function(){
 
-        loadSummary();
+    () => {
 
-        const btn = el("checkoutBtn");
+        try {
 
-        if(btn){
+            loadSummary();
 
-            btn.addEventListener(
-                "click",
-                placeOrder
+
+            const btn =
+                el("checkoutBtn");
+
+
+            if (btn) {
+
+                btn.addEventListener(
+
+                    "click",
+
+                    placeOrder
+                );
+            }
+
+
+            console.log(
+                "✅ Checkout Ready"
+            );
+
+        } catch (err) {
+
+            console.error(
+                "❌ INIT ERROR:",
+                err
             );
         }
     }
 );
+
+
+// ======================================
+// GLOBAL EXPORTS
+// ======================================
+window.placeOrder =
+    placeOrder;

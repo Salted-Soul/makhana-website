@@ -1,327 +1,911 @@
-console.log("LOGIN FUNCTION TRIGGERED");
-
-document.addEventListener("DOMContentLoaded", () => {
-
-// =======================
-// GLOBAL CONFIG
-// =======================
-const API_BASE = "http://https://makhana-website.onrender.com/api/auth";
-
-
-// =======================
-// SAFE DOM HELPERS (NEW 🔥)
-// =======================
-function getEl(id) {
-  const el = document.getElementById(id);
-  if (!el) console.warn(`${id} not found in DOM`);
-  return el;
-}
-
-
-// =======================
-// 🆕 SAFE EVENT ATTACHER (NEW 🔥🔥🔥)
-// =======================
-function safeAddEvent(el, event, handler) {
-  if (!el) {
-    console.warn("⚠ Tried to attach event on missing element");
-    return;
-  }
-  el.addEventListener(event, handler);
-}
-
-
-// =======================
-// 🆕 GLOBAL ERROR HANDLER (NEW 🔥)
-// =======================
-window.addEventListener("error", (e) => {
-  console.error("🔥 Global JS Error:", e.message);
-});
-
-
-// =======================
-// 🆕 FETCH WRAPPER (NEW 🔥)
-// =======================
-async function safeFetch(url, options = {}) {
-  try {
-    const res = await fetch(url, {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {})
-      },
-      ...options
-    });
-
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      console.error("❌ API Error:", data);
-      throw new Error(data.message || "API Error");
-    }
-
-    return data;
-
-  } catch (err) {
-    console.error("❌ Fetch Failed:", err.message);
-    throw err;
-  }
-}
-
-
-// =======================
-// HELPER FUNCTIONS
-// =======================
-function showMessage(msg, type = "error") {
-  const box = getEl("messageBox");
-
-  if (!box) return;
-
-  box.innerText = msg;
-  box.className = "message-box " + type;
-}
-
-function toggleLoading(btn, isLoading) {
-  if (!btn) return;
-
-  if (isLoading) {
-    btn.disabled = true;
-    btn.innerText = "Please wait...";
-  } else {
-    btn.disabled = false;
-    btn.innerText = btn.dataset.original || "Submit";
-  }
-}
-
-
-// =======================
-// 🆕 EMAIL VALIDATION (NEW)
-// =======================
-function isValidEmail(email) {
-  return /\S+@\S+\.\S+/.test(email);
-}
+    console.log(
+        "🔐 AUTH MODULE INITIALIZING..."
+    );
 
 
-// =======================
-// 🆕 PASSWORD STRENGTH (NEW)
-// =======================
-function isStrongPassword(password) {
-  return password.length >= 6;
-}
+    // ======================================
+    // DOM READY
+    // ======================================
+    document.addEventListener(
 
+        "DOMContentLoaded",
 
-// =======================
-// ✅ SESSION CHECK (FIXED 🔥)
-// =======================
-async function checkAuth() {
-  try {
-    const res = await fetch(`${API_BASE}/check`, {
-      method: "GET",
-      credentials: "include"
-    });
+        () => {
 
-    if (!res.ok) return null;
+            // ======================================
+            // CONFIG
+            // ======================================
+            const REQUEST_TIMEOUT = 15000;
 
-    const data = await res.json();
+            const DEBUG =
+                window.location.hostname ===
+                "localhost";
 
-    console.log("✅ Auth user:", data.user);
 
-    return data.user;
+            // ======================================
+            // SAFE LOGGER
+            // ======================================
+            const log = (
+                ...args
+            ) => {
 
-  } catch (err) {
-    console.error("Auth check failed:", err);
-    return null;
-  }
-}
+                if (DEBUG) {
 
+                    console.log(...args);
+                }
+            };
 
-// =======================
-// SIGNUP
-// =======================
-async function signup(e) {
-  e.preventDefault();
 
-  const btn = getEl("signupBtn");
-  if (btn) btn.dataset.original = "Create Account";
+            // ======================================
+            // SAFE DOM HELPERS
+            // ======================================
+            function getEl(id) {
 
-  const name = getEl("name")?.value.trim();
-  const email = getEl("email")?.value.trim();
-  const password = getEl("password")?.value.trim();
+                const el =
+                    document.getElementById(id);
 
-  if (!name || !email || !password) {
-    return showMessage("All fields are required");
-  }
+                if (!el) {
 
-  // 🆕 EXTRA VALIDATION
-  if (!isValidEmail(email)) {
-    return showMessage("Invalid email format");
-  }
+                    console.warn(
+                        `⚠ Missing element: ${id}`
+                    );
+                }
 
-  if (!isStrongPassword(password)) {
-    return showMessage("Password must be at least 6 characters");
-  }
+                return el;
+            }
 
-  try {
-    toggleLoading(btn, true);
 
-    const data = await safeFetch(`${API_BASE}/signup`, {
-      method: "POST",
-      body: JSON.stringify({ name, email, password })
-    });
+            // ======================================
+            // SAFE REDIRECT
+            // ======================================
+            function safeRedirect(path) {
 
-    console.log("Signup response:", data);
+                if (!path) return;
 
-    showMessage("Account created successfully!", "success");
+                window.location.replace(path);
+            }
 
-    setTimeout(() => {
-      window.location.replace("index.html");
-    }, 1500);
 
-  } catch (err) {
-    showMessage(err.message || "Signup failed");
-  } finally {
-    toggleLoading(btn, false);
-  }
-}
+            // ======================================
+            // SAFE EVENT BINDING
+            // ======================================
+            function safeAddEvent(
 
+                element,
 
-// =======================
-// LOGIN
-// =======================
-async function login(e) {
-  e.preventDefault();
+                event,
 
-  console.log("🚀 LOGIN CLICKED");
+                handler
 
-  const btn = getEl("loginBtn");
-  if (btn) btn.dataset.original = "Login";
+            ) {
 
-  const email = getEl("email")?.value.trim();
-  const password = getEl("password")?.value.trim();
+                if (!element) {
 
-  if (!email || !password) {
-    return showMessage("All fields are required");
-  }
+                    console.warn(
+                        "⚠ Cannot attach event to missing element"
+                    );
 
-  try {
-    toggleLoading(btn, true);
+                    return;
+                }
 
-    const data = await safeFetch(`${API_BASE}/login`, {
-      method: "POST",
-      body: JSON.stringify({ email, password })
-    });
+                element.addEventListener(
+                    event,
+                    handler
+                );
+            }
 
-    console.log("🔥 LOGIN RESPONSE:", data);
 
-// =======================
-// SAVE TOKEN 🔥🔥🔥
-// =======================
-if (data.token) {
-  localStorage.setItem("token", data.token);
-}
+            // ======================================
+            // GLOBAL ERROR HANDLER
+            // ======================================
+            window.addEventListener(
 
-if (data.user) {
-  localStorage.setItem(
-    "user",
-    JSON.stringify(data.user)
-  );
-}
+                "error",
 
-console.log(
-  "✅ TOKEN SAVED:",
-  localStorage.getItem("token")
-);
+                (e) => {
 
-showMessage("Login successful!", "success");
+                    console.error(
+                        "🔥 Global Error:",
+                        e.message
+                    );
+                }
+            );
 
-setTimeout(() => {
-  window.location.replace("index.html");
-}, 1000);
 
-  } catch (err) {
-    showMessage(err.message || "Login failed");
-  } finally {
-    toggleLoading(btn, false);
-  }
-}
+            // ======================================
+            // OFFLINE DETECTION
+            // ======================================
+            window.addEventListener(
 
+                "offline",
 
-// =======================
-// LOGOUT (NEW 🔥)
-// =======================
-async function logout() {
-  try {
-    await fetch(`${API_BASE}/logout`, {
-      method: "POST",
-      credentials: "include"
-    });
+                () => {
 
-    window.location.replace("login.html");
+                    showMessage(
 
-  } catch (err) {
-    console.error("Logout failed:", err);
-  }
-}
+                        "You are offline. Please check your internet connection."
+                    );
+                }
+            );
 
 
-// =======================
-// ATTACH EVENTS (CRITICAL FIX 🔥)
-// =======================
-const loginForm = getEl("loginForm");
-safeAddEvent(loginForm, "submit", login);
+            // ======================================
+            // ONLINE DETECTION
+            // ======================================
+            window.addEventListener(
 
-const signupForm = getEl("signupForm");
-safeAddEvent(signupForm, "submit", signup);
+                "online",
 
+                () => {
 
-// =======================
-// 🆕 ENTER KEY FIX (NEW)
-// =======================
-document.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    const loginForm = getEl("loginForm");
-    const signupForm = getEl("signupForm");
+                    showMessage(
 
-    if (loginForm) loginForm.dispatchEvent(new Event("submit"));
-    if (signupForm) signupForm.dispatchEvent(new Event("submit"));
-  }
-});
+                        "Internet connection restored.",
 
+                        "success"
+                    );
+                }
+            );
 
-// =======================
-// ✅ AUTO AUTH GUARD (NEW 🔥🔥🔥)
-// =======================
-(async () => {
-  const user = await checkAuth();
 
-  const isAuthPage =
-    window.location.pathname.includes("login") ||
-    window.location.pathname.includes("signup");
+            // ======================================
+            // MESSAGE SYSTEM
+            // ======================================
+            function showMessage(
 
-  console.log("🔐 Auth Guard:", { user, isAuthPage });
+                message,
 
-  if (!user && !isAuthPage) {
-    console.warn("⛔ Not logged in → redirecting to login");
-    window.location.replace("login.html");
-  }
+                type = "error"
 
-  if (user && isAuthPage) {
-    console.warn("⚠ Already logged in → redirecting to index");
-    window.location.replace("index.html");
-  }
-})();
+            ) {
 
-});
+                const box =
+                    getEl("messageBox");
 
+                if (!box) return;
 
-// =======================
-// 🔥 MAKE FUNCTIONS GLOBAL (CRITICAL FIX)
-// =======================
-window.signup = signup;
-window.login = login;
-window.logout = logout;
 
+                box.innerText =
+                    message;
 
-// =======================
-// 🆕 DEBUG MODE (NEW)
-// =======================
-console.log("✅ AUTH SCRIPT FULLY LOADED & ENHANCED");
+
+                box.className =
+                    `message-box ${type}`;
+
+
+                box.style.display =
+                    "block";
+
+
+                clearTimeout(
+                    box.hideTimeout
+                );
+
+
+                box.hideTimeout =
+                    setTimeout(
+
+                        () => {
+
+                            box.style.display =
+                                "none";
+
+                        },
+
+                        4000
+                    );
+            }
+
+
+            // ======================================
+            // LOADING SYSTEM
+            // ======================================
+            function toggleLoading(
+
+                button,
+
+                loading
+
+            ) {
+
+                if (!button) return;
+
+
+                if (loading) {
+
+                    button.disabled = true;
+
+                    button.dataset.loading =
+                        "true";
+
+                    button.style.opacity =
+                        "0.7";
+
+                    button.style.cursor =
+                        "not-allowed";
+
+                    button.innerText =
+                        "Please wait...";
+
+                } else {
+
+                    button.disabled = false;
+
+                    button.dataset.loading =
+                        "false";
+
+                    button.style.opacity =
+                        "1";
+
+                    button.style.cursor =
+                        "pointer";
+
+                    button.innerText =
+
+                        button.dataset.original ||
+
+                        "Submit";
+                }
+            }
+
+
+            // ======================================
+            // VALIDATORS
+            // ======================================
+            function isValidEmail(
+                email
+            ) {
+
+                return /\S+@\S+\.\S+/.test(
+                    email
+                );
+            }
+
+
+            function isStrongPassword(
+                password
+            ) {
+
+                return (
+                    typeof password ===
+                        "string" &&
+
+                    password.length >= 6
+                );
+            }
+
+
+            // ======================================
+            // SAFE STORAGE
+            // ======================================
+            const Session = {
+
+                setUser(user) {
+
+                    try {
+
+                        localStorage.setItem(
+
+                            "user",
+
+                            JSON.stringify(user)
+                        );
+
+                    } catch (err) {
+
+                        console.error(
+                            "❌ Storage save failed:",
+                            err
+                        );
+                    }
+                },
+
+                getUser() {
+
+                    try {
+
+                        return JSON.parse(
+
+                            localStorage.getItem(
+                                "user"
+                            )
+                        );
+
+                    } catch {
+
+                        return null;
+                    }
+                },
+
+                clear() {
+
+                    localStorage.removeItem(
+                        "user"
+                    );
+
+                    sessionStorage.clear();
+                }
+            };
+
+
+            // ======================================
+            // AUTH CHECK
+            // ======================================
+            async function checkAuth() {
+
+                try {
+
+                    const response =
+
+                        await API.auth.check();
+
+
+                    if (
+                        response.success &&
+                        response.user
+                    ) {
+
+                        Session.setUser(
+                            response.user
+                        );
+
+                        log(
+                            "✅ Authenticated:",
+                            response.user
+                        );
+
+                        return response.user;
+                    }
+
+
+                    return null;
+
+                } catch (err) {
+
+                    console.error(
+                        "❌ Auth check failed:",
+                        err
+                    );
+
+                    return null;
+                }
+            }
+
+
+            // ======================================
+            // SIGNUP
+            // ======================================
+            async function signup(e) {
+
+                e.preventDefault();
+
+
+                const btn =
+                    getEl("signupBtn");
+
+
+                if (
+                    btn?.dataset.loading ===
+                    "true"
+                ) {
+
+                    return;
+                }
+
+
+                if (btn) {
+
+                    btn.dataset.original =
+                        "Create Account";
+                }
+
+
+                const name =
+                    getEl("name")
+                        ?.value
+                        ?.trim();
+
+
+                const email =
+                    getEl("email")
+                        ?.value
+                        ?.trim();
+
+
+                const password =
+                    getEl("password")
+                        ?.value
+                        ?.trim();
+
+
+                // VALIDATION
+                if (
+
+                    !name ||
+
+                    !email ||
+
+                    !password
+
+                ) {
+
+                    return showMessage(
+
+                        "All fields are required"
+                    );
+                }
+
+
+                if (
+                    !isValidEmail(email)
+                ) {
+
+                    return showMessage(
+                        "Invalid email address"
+                    );
+                }
+
+
+                if (
+                    !isStrongPassword(
+                        password
+                    )
+                ) {
+
+                    return showMessage(
+
+                        "Password must be at least 6 characters"
+                    );
+                }
+
+
+                try {
+
+                    toggleLoading(
+                        btn,
+                        true
+                    );
+
+
+                    const response =
+
+                        await API.auth.signup({
+
+                            name,
+
+                            email,
+
+                            password
+                        });
+
+
+                    if (
+                        !response.success
+                    ) {
+
+                        throw new Error(
+
+                            response.message ||
+
+                            "Signup failed"
+                        );
+                    }
+
+
+                    if (
+                        response.user
+                    ) {
+
+                        Session.setUser(
+                            response.user
+                        );
+                    }
+
+
+                    showMessage(
+
+                        "Account created successfully!",
+
+                        "success"
+                    );
+
+
+                    setTimeout(
+
+                        () => {
+
+                            safeRedirect(
+                                "index.html"
+                            );
+
+                        },
+
+                        1200
+                    );
+
+                } catch (err) {
+
+                    console.error(
+                        "❌ Signup Error:",
+                        err
+                    );
+
+                    showMessage(
+
+                        err.message ||
+
+                        "Signup failed"
+                    );
+
+                } finally {
+
+                    toggleLoading(
+                        btn,
+                        false
+                    );
+                }
+            }
+
+
+            // ======================================
+            // LOGIN
+            // ======================================
+            async function login(e) {
+
+                e.preventDefault();
+
+                log(
+                    "🚀 LOGIN INITIATED"
+                );
+
+
+                const btn =
+                    getEl("loginBtn");
+
+
+                if (
+                    btn?.dataset.loading ===
+                    "true"
+                ) {
+
+                    return;
+                }
+
+
+                if (btn) {
+
+                    btn.dataset.original =
+                        "Login";
+                }
+
+
+                const email =
+                    getEl("email")
+                        ?.value
+                        ?.trim();
+
+
+                const password =
+                    getEl("password")
+                        ?.value
+                        ?.trim();
+
+
+                // VALIDATION
+                if (
+                    !email ||
+                    !password
+                ) {
+
+                    return showMessage(
+
+                        "All fields are required"
+                    );
+                }
+
+
+                try {
+
+                    toggleLoading(
+                        btn,
+                        true
+                    );
+
+
+                    const response =
+
+                        await API.auth.login({
+
+                            email,
+
+                            password
+                        });
+
+
+                    if (
+                        !response.success
+                    ) {
+
+                        throw new Error(
+
+                            response.message ||
+
+                            "Login failed"
+                        );
+                    }
+
+
+                    if (
+                        response.user
+                    ) {
+
+                        Session.setUser(
+                            response.user
+                        );
+
+                        log(
+                            "✅ Session saved"
+                        );
+                    }
+
+
+                    showMessage(
+
+                        "Login successful!",
+
+                        "success"
+                    );
+
+
+                    setTimeout(
+
+                        () => {
+
+                            safeRedirect(
+                                "index.html"
+                            );
+
+                        },
+
+                        1000
+                    );
+
+                } catch (err) {
+
+                    console.error(
+                        "❌ Login Error:",
+                        err
+                    );
+
+                    showMessage(
+
+                        err.message ||
+
+                        "Login failed"
+                    );
+
+                } finally {
+
+                    toggleLoading(
+                        btn,
+                        false
+                    );
+                }
+            }
+
+
+            // ======================================
+            // LOGOUT
+            // ======================================
+            async function logout() {
+
+                try {
+
+                    await API.auth.logout();
+
+                    Session.clear();
+
+                    log(
+                        "✅ Session cleared"
+                    );
+
+                    safeRedirect(
+                        "login.html"
+                    );
+
+                } catch (err) {
+
+                    console.error(
+                        "❌ Logout Error:",
+                        err
+                    );
+
+                    showMessage(
+                        "Logout failed"
+                    );
+                }
+            }
+
+
+            // ======================================
+            // ATTACH EVENTS
+            // ======================================
+            safeAddEvent(
+
+                getEl("loginForm"),
+
+                "submit",
+
+                login
+            );
+
+
+            safeAddEvent(
+
+                getEl("signupForm"),
+
+                "submit",
+
+                signup
+            );
+
+
+            // ======================================
+            // ENTER KEY SUPPORT
+            // ======================================
+            document.addEventListener(
+
+                "keypress",
+
+                (e) => {
+
+                    if (
+                        e.key !== "Enter"
+                    ) {
+
+                        return;
+                    }
+
+
+                    const loginForm =
+                        getEl("loginForm");
+
+                    const signupForm =
+                        getEl("signupForm");
+
+
+                    if (loginForm) {
+
+                        loginForm.dispatchEvent(
+
+                            new Event(
+                                "submit"
+                            )
+                        );
+                    }
+
+
+                    if (signupForm) {
+
+                        signupForm.dispatchEvent(
+
+                            new Event(
+                                "submit"
+                            )
+                        );
+                    }
+                }
+            );
+
+
+            // ======================================
+            // AUTH GUARD
+            // ======================================
+            (async () => {
+
+                const user =
+                    await checkAuth();
+
+
+                const authPages = [
+
+                    "login.html",
+
+                    "signup.html"
+                ];
+
+
+                const protectedPages = [
+
+                    "cart.html",
+
+                    "checkout.html",
+
+                    "orders.html",
+
+                    "profile.html",
+
+                    "wishlist.html"
+                ];
+
+
+                const currentPage =
+
+                    window.location.pathname
+                        .split("/")
+                        .pop();
+
+
+                const isAuthPage =
+                    authPages.includes(
+                        currentPage
+                    );
+
+
+                const isProtectedPage =
+                    protectedPages.includes(
+                        currentPage
+                    );
+
+
+                log(
+                    "🔐 AUTH GUARD:",
+                    {
+                        user,
+                        currentPage
+                    }
+                );
+
+
+                // PROTECTED PAGE
+                if (
+                    !user &&
+                    isProtectedPage
+                ) {
+
+                    console.warn(
+                        "⛔ Login required"
+                    );
+
+                    return safeRedirect(
+                        "login.html"
+                    );
+                }
+
+
+                // ALREADY LOGGED IN
+                if (
+                    user &&
+                    isAuthPage
+                ) {
+
+                    console.warn(
+                        "⚠ Already logged in"
+                    );
+
+                    return safeRedirect(
+                        "index.html"
+                    );
+                }
+
+            })();
+
+
+            // ======================================
+            // GLOBAL EXPORTS
+            // ======================================
+            window.signup =
+                signup;
+
+            window.login =
+                login;
+
+            window.logout =
+                logout;
+
+
+            console.log(
+                "✅ AUTH SYSTEM READY"
+            );
+        }
+    );

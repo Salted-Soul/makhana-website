@@ -1,382 +1,942 @@
 const mongoose = require("mongoose");
 
-const orderTimelineSchema = new mongoose.Schema({
-    status: {
-        type: String,
-        required: true
-    },
-    message: {
-        type: String,
-        default: ""
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-}, { _id: false });
 
+// ======================================
+// ORDER TIMELINE SCHEMA
+// ======================================
+const orderTimelineSchema =
+    new mongoose.Schema(
 
-// ===============================
-// MAIN ORDER SCHEMA
-// ===============================
-const orderSchema = new mongoose.Schema({
-
-    // ===========================
-    // USER
-    // ===========================
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-        index: true
-    },
-
-    // backward compatibility
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        index: true
-    },
-
-
-    // ===========================
-    // ORDER ITEMS
-    // ===========================
-    items: [
         {
-            name: {
+
+            status: {
+
                 type: String,
-                required: true
+
+                required: true,
+
+                trim: true
+            },
+
+            message: {
+
+                type: String,
+
+                default: "",
+
+                trim: true
+            },
+
+            createdAt: {
+
+                type: Date,
+
+                default: Date.now
+            }
+
+        },
+
+        {
+
+            _id: false
+        }
+    );
+
+
+// ======================================
+// ORDER ITEM SCHEMA
+// ======================================
+const orderItemSchema =
+    new mongoose.Schema(
+
+        {
+
+            productId: {
+
+                type:
+                    mongoose.Schema.Types.ObjectId,
+
+                ref: "Product",
+
+                default: null
+            },
+
+            name: {
+
+                type: String,
+
+                required: true,
+
+                trim: true
             },
 
             price: {
+
                 type: Number,
+
                 required: true,
+
                 min: 0
             },
 
             quantity: {
+
                 type: Number,
+
                 required: true,
-                min: 1
+
+                min: 1,
+
+                validate: {
+
+                    validator: Number.isInteger,
+
+                    message:
+                        "Quantity must be an integer"
+                }
             },
 
             image: {
+
                 type: String,
+
                 default: ""
             }
+
+        },
+
+        {
+
+            _id: false
         }
-    ],
+    );
 
 
-    // ===========================
-    // TOTALS
-    // ===========================
-    totalAmount: {
-        type: Number,
-        required: true,
-        default: 0,
-        min: 0
-    },
+// ======================================
+// MAIN ORDER SCHEMA
+// ======================================
+const orderSchema =
+    new mongoose.Schema(
 
-    // backward compatibility
-    total: {
-        type: Number,
-        default: 0
-    },
+        {
 
+            // ======================================
+            // USER
+            // ======================================
+            user: {
 
-    // ===========================
-    // CUSTOMER DETAILS
-    // ===========================
-    name: {
-        type: String,
-        trim: true,
-        default: ""
-    },
+                type:
+                    mongoose.Schema.Types.ObjectId,
 
-    phone: {
-        type: String,
-        trim: true,
-        index: true,
-        default: ""
-    },
+                ref: "User",
 
-    address: {
-        type: String,
-        trim: true,
-        default: ""
-    },
+                required: true,
 
-    city: {
-        type: String,
-        trim: true,
-        default: ""
-    },
+                index: true
+            },
 
-    pincode: {
-        type: String,
-        trim: true,
-        default: ""
-    },
+            // ======================================
+            // ORDER NUMBER
+            // ======================================
+            orderNumber: {
+
+                type: String,
+
+                unique: true,
+
+                index: true
+            },
 
 
-    // ===========================
-    // PAYMENT
-    // ===========================
-    payment: {
-        type: String,
-        enum: ["COD", "Razorpay", "WhatsApp"],
-        default: "Razorpay",
-        index: true
-    },
+            // BACKWARD COMPATIBILITY
+            userId: {
 
-    paymentMethod: {
-        type: String,
-        enum: ["COD", "ONLINE", "UPI", "RAZORPAY", "WHATSAPP"],
-        default: "COD",
-        index: true
-    },
+                type:
+                    mongoose.Schema.Types.ObjectId,
 
-    paymentStatus: {
-        type: String,
-        enum: [
-            "PENDING",
-            "PAID",
-            "FAILED",
-            "REFUNDED"
-        ],
-        default: "PENDING",
-        index: true
-    },
+                ref: "User",
 
-    transactionId: {
-        type: String,
-        index: true,
-        sparse: true
-    },
+                index: true
+            },
 
 
-    // ===========================
-    // RAZORPAY
-    // ===========================
-    paymentId: String,
-    orderId: String,
-    signature: String,
+            // ======================================
+            // ITEMS
+            // ======================================
+            items: {
 
-    razorpay_payment_id: {
-        type: String,
-        index: true,
-        sparse: true
-    },
+                type: [orderItemSchema],
 
-    razorpay_order_id: {
-        type: String,
-        index: true,
-        sparse: true
-    },
+                validate: {
 
+                    validator: function (
+                        items
+                    ) {
 
-    // ===========================
-    // WHATSAPP
-    // ===========================
-    whatsappMessageId: {
-        type: String,
-        default: "",
-        sparse: true
-    },
+                        return (
+                            Array.isArray(items) &&
+                            items.length > 0
+                        );
+                    },
 
-    whatsappStatus: {
-        type: String,
-        enum: [
-            "NOT_SENT",
-            "SENT",
-            "DELIVERED",
-            "READ",
-            "FAILED"
-        ],
-        default: "NOT_SENT",
-        index: true
-    },
-
-    botSessionId: {
-        type: String,
-        default: "",
-        index: true,
-        sparse: true
-    },
+                    message:
+                        "Order must contain at least one item"
+                }
+            },
 
 
-    // ===========================
-    // ORDER STATUS
-    // ===========================
-    status: {
-        type: String,
-        enum: [
-            "Pending",
-            "Confirmed",
-            "Processing",
-            "Packed",
-            "Shipped",
-            "Out For Delivery",
-            "Delivered",
-            "Cancelled"
-        ],
-        default: "Pending",
-        index: true
-    },
+            // ======================================
+            // TOTALS
+            // ======================================
+            totalAmount: {
+
+                type: Number,
+
+                required: true,
+
+                min: 0,
+
+                default: 0
+            },
 
 
-    // ===========================
-    // OTP SYSTEM
-    // ===========================
-    otp: {
-        type: String,
-        default: ""
-    },
+            // BACKWARD COMPATIBILITY
+            total: {
 
-    otpExpiry: {
-        type: Date,
-        default: null
-    },
+                type: Number,
 
-    otpVerified: {
-        type: Boolean,
-        default: false
-    },
+                default: 0
+            },
 
 
-    // ===========================
-    // INVOICE
-    // ===========================
-    invoiceUrl: {
-        type: String,
-        default: ""
-    },
+            shippingCharge: {
+
+                type: Number,
+
+                default: 0,
+
+                min: 0
+            },
 
 
-    // ===========================
-    // TIMELINE
-    // ===========================
-    timeline: {
-        type: [orderTimelineSchema],
-        default: []
-    },
+            taxAmount: {
+
+                type: Number,
+
+                default: 0,
+
+                min: 0
+            },
 
 
-    // ===========================
-    // FLAGS
-    // ===========================
-    isWhatsAppOrder: {
-        type: Boolean,
-        default: false,
-        index: true
-    },
+            discountAmount: {
 
-    isArchived: {
-        type: Boolean,
-        default: false
+                type: Number,
+
+                default: 0,
+
+                min: 0
+            },
+
+
+            finalAmount: {
+
+                type: Number,
+
+                default: 0,
+
+                min: 0
+            },
+
+
+            // ======================================
+            // CUSTOMER DETAILS
+            // ======================================
+            name: {
+
+                type: String,
+
+                trim: true,
+
+                default: ""
+            },
+
+
+            phone: {
+
+                type: String,
+
+                trim: true,
+
+                index: true,
+
+                default: ""
+            },
+
+
+            email: {
+
+                type: String,
+
+                trim: true,
+
+                lowercase: true,
+
+                default: ""
+            },
+
+
+            address: {
+
+                type: String,
+
+                trim: true,
+
+                default: ""
+            },
+
+
+            city: {
+
+                type: String,
+
+                trim: true,
+
+                default: ""
+            },
+
+
+            state: {
+
+                type: String,
+
+                trim: true,
+
+                default: ""
+            },
+
+
+            country: {
+
+                type: String,
+
+                trim: true,
+
+                default: "India"
+            },
+
+
+            pincode: {
+
+                type: String,
+
+                trim: true,
+
+                default: ""
+            },
+
+
+            // ======================================
+            // PAYMENT
+            // ======================================
+            payment: {
+
+                type: String,
+
+                enum: [
+                    "COD",
+                    "Razorpay",
+                    "WhatsApp"
+                ],
+
+                default: "Razorpay",
+
+                index: true
+            },
+
+
+            paymentMethod: {
+
+                type: String,
+
+                enum: [
+                    "COD",
+                    "ONLINE",
+                    "UPI",
+                    "RAZORPAY",
+                    "WHATSAPP"
+                ],
+
+                default: "COD",
+
+                index: true
+            },
+
+
+            paymentStatus: {
+
+                type: String,
+
+                enum: [
+                    "PENDING",
+                    "PAID",
+                    "FAILED",
+                    "REFUNDED"
+                ],
+
+                default: "PENDING",
+
+                index: true
+            },
+
+            // ======================================
+            // PAYMENT VERIFICATION
+            // ======================================
+            isPaymentVerified: {
+
+                type: Boolean,
+
+                default: false,
+
+                index: true
+            },
+
+
+            transactionId: {
+
+                type: String,
+
+                sparse: true,
+
+                index: true
+            },
+
+
+            // ======================================
+            // RAZORPAY
+            // ======================================
+            paymentId: String,
+
+            orderId: String,
+
+            signature: String,
+
+
+            razorpay_payment_id: {
+
+                type: String,
+
+                sparse: true,
+
+                index: true
+            },
+
+
+            razorpay_order_id: {
+
+                type: String,
+
+                sparse: true,
+
+                index: true
+            },
+
+
+            razorpay_signature: {
+
+                type: String,
+
+                default: ""
+            },
+
+
+            // ======================================
+            // REFUNDS
+            // ======================================
+            refundId: {
+
+                type: String,
+
+                default: ""
+            },
+
+
+            refundedAt: {
+
+                type: Date,
+
+                default: null
+            },
+
+
+            refundReason: {
+
+                type: String,
+
+                default: ""
+            },
+
+
+            // ======================================
+            // SHIPPING
+            // ======================================
+            trackingId: {
+
+                type: String,
+
+                default: "",
+
+                sparse: true
+            },
+
+
+            courierPartner: {
+
+                type: String,
+
+                default: ""
+            },
+
+
+            estimatedDelivery: {
+
+                type: Date,
+
+                default: null
+            },
+
+
+            deliveredAt: {
+
+                type: Date,
+
+                default: null
+            },
+
+
+            // ======================================
+            // WHATSAPP
+            // ======================================
+            whatsappMessageId: {
+
+                type: String,
+
+                default: "",
+
+                sparse: true
+            },
+
+
+            whatsappStatus: {
+
+                type: String,
+
+                enum: [
+                    "NOT_SENT",
+                    "SENT",
+                    "DELIVERED",
+                    "READ",
+                    "FAILED"
+                ],
+
+                default: "NOT_SENT",
+
+                index: true
+            },
+
+
+            botSessionId: {
+
+                type: String,
+
+                default: "",
+
+                sparse: true,
+
+                index: true
+            },
+
+
+            // ======================================
+            // ORDER STATUS
+            // ======================================
+            status: {
+
+                type: String,
+
+                enum: [
+                    "Pending",
+                    "Confirmed",
+                    "Processing",
+                    "Packed",
+                    "Shipped",
+                    "Out For Delivery",
+                    "Delivered",
+                    "Cancelled",
+                    "Refunded"
+                ],
+
+                default: "Pending",
+
+                index: true
+            },
+
+
+            // ======================================
+            // OTP DELIVERY
+            // ======================================
+            otp: {
+
+                type: String,
+
+                default: ""
+            },
+
+
+            otpExpiry: {
+
+                type: Date,
+
+                default: null
+            },
+
+
+            otpVerified: {
+
+                type: Boolean,
+
+                default: false
+            },
+
+
+            // ======================================
+            // INVOICE
+            // ======================================
+            invoiceUrl: {
+
+                type: String,
+
+                default: ""
+            },
+
+
+            invoiceNumber: {
+
+                type: String,
+
+                default: ""
+            },
+
+
+            // ======================================
+            // TIMELINE
+            // ======================================
+            timeline: {
+
+                type: [
+                    orderTimelineSchema
+                ],
+
+                default: []
+            },
+
+
+            // ======================================
+            // ANALYTICS
+            // ======================================
+            source: {
+
+                type: String,
+
+                default: "website"
+            },
+
+
+            deviceType: {
+
+                type: String,
+
+                default: "web"
+            },
+
+
+            // ======================================
+            // FLAGS
+            // ======================================
+            isWhatsAppOrder: {
+
+                type: Boolean,
+
+                default: false,
+
+                index: true
+            },
+
+
+            isArchived: {
+
+                type: Boolean,
+
+                default: false
+            }
+
+        },
+
+        {
+
+            timestamps: true,
+
+            versionKey: false
+        }
+    );
+
+
+// ======================================
+// PRE SAVE HOOK
+// ======================================
+orderSchema.pre(
+
+    "save",
+
+    async function (next){
+
+        try {
+
+            // ======================================
+            // BACKWARD COMPATIBILITY
+            // ======================================
+            if (
+                !this.totalAmount &&
+                this.total
+            ) {
+
+                this.totalAmount =
+                    this.total;
+            }
+
+
+            if (
+                !this.total &&
+                this.totalAmount
+            ) {
+
+                this.total =
+                    this.totalAmount;
+            }
+
+
+            if (
+                !this.userId &&
+                this.user
+            ) {
+
+                this.userId =
+                    this.user;
+            }
+
+            // ======================================
+            // ORDER NUMBER GENERATION
+            // ======================================
+            if (!this.orderNumber) {
+
+                this.orderNumber =
+
+                    `ORD-${Date.now()}-${Math.floor(
+
+                        1000 + Math.random() * 9000
+                    )}`;
+            }
+
+
+            // ======================================
+            // FINAL AMOUNT
+            // ======================================
+            this.finalAmount = Number(
+
+                (
+
+                    (
+                        this.totalAmount || 0
+                    ) +
+
+                    (
+                        this.shippingCharge || 0
+                    ) +
+
+                    (
+                        this.taxAmount || 0
+                    ) -
+
+                    (
+                        this.discountAmount || 0
+                    )
+
+                ).toFixed(2)
+            );
+
+            // ======================================
+            // TIMELINE INIT
+            // ======================================
+            if (
+                !Array.isArray(
+                    this.timeline
+                )
+            ) {
+
+                this.timeline = [];
+            }
+
+
+            // ======================================
+            // STATUS TRACKING
+            // ======================================
+            const latestTimelineEntry =
+
+                this.timeline[
+                this.timeline.length - 1
+                ];
+
+
+            const exists =
+
+                latestTimelineEntry &&
+
+                latestTimelineEntry.status ===
+                this.status;
+
+            if (!exists) {
+
+                this.timeline.push({
+
+                    status:
+                        this.status ||
+                        "Pending",
+
+                    message:
+                        `Order status updated to ${this.status || "Pending"}`
+                });
+            }
+// ======================================
+// PHONE NORMALIZATION
+// ======================================
+if (this.phone) {
+
+    this.phone =
+
+        String(this.phone)
+
+            .replace(/\s+/g, "")
+
+            .trim();
+}
+
+            // ======================================
+            // DELIVERY TRACKING
+            // ======================================
+            if (
+                this.status ===
+                "Delivered" &&
+                !this.deliveredAt
+            ) {
+
+                this.deliveredAt =
+                    new Date();
+            }
+next();
+        } catch (err) {
+
+            console.error(
+                "❌ ORDER PRE SAVE ERROR:",
+                err
+            );
+
+            next(err);
+        }
     }
-
-}, {
-    timestamps: true
-});
+);
 
 
-// ===============================
-// SAFE MODERN PRE SAVE HOOK
-// ===============================
-orderSchema.pre("save", async function () {
-
-    try {
-
-        // =========================
-        // BACKWARD COMPATIBILITY
-        // =========================
-        if (!this.totalAmount && this.total) {
-            this.totalAmount = this.total;
-        }
-
-        if (!this.total && this.totalAmount) {
-            this.total = this.totalAmount;
-        }
-
-        if (!this.userId && this.user) {
-            this.userId = this.user;
-        }
-
-        // =========================
-        // SAFE TIMELINE INIT
-        // =========================
-        if (!Array.isArray(this.timeline)) {
-            this.timeline = [];
-        }
-
-        // =========================
-        // SAFE STATUS TRACKING
-        // =========================
-        const exists = this.timeline.some(
-            item => item.status === this.status
-        );
-
-        if (!exists) {
-
-            this.timeline.push({
-                status: this.status || "Pending",
-                message: `Order status updated to ${this.status || "Pending"}`
-            });
-        }
-
-    } catch (err) {
-
-        console.error(
-            "ORDER PRE SAVE ERROR:",
-            err
-        );
-
-        throw err;
-    }
-});
-
-// ===============================
+// ======================================
 // SAFE JSON OUTPUT
-// ===============================
-orderSchema.methods.toJSON = function () {
+// ======================================
+orderSchema.methods.toJSON =
+    function () {
 
-    const obj = this.toObject();
+        const obj =
+            this.toObject();
 
-    obj.totalAmount = obj.totalAmount || obj.total || 0;
+        obj.totalAmount =
+            obj.totalAmount ||
+            obj.total ||
+            0;
 
-    obj.status = obj.status || "Pending";
+        obj.finalAmount =
+            obj.finalAmount ||
+            obj.totalAmount;
 
-    obj.paymentStatus = obj.paymentStatus || "PENDING";
+        obj.status =
+            obj.status ||
+            "Pending";
 
-    obj.paymentMethod = obj.paymentMethod || "COD";
+        obj.paymentStatus =
+            obj.paymentStatus ||
+            "PENDING";
 
-    return obj;
-};
+        obj.paymentMethod =
+            obj.paymentMethod ||
+            "COD";
+
+        return obj;
+    };
 
 
-// ===============================
+// ======================================
 // INDEXES
-// ===============================
-orderSchema.index({ createdAt: -1 });
+// ======================================
+orderSchema.index({
+    createdAt: -1
+});
 
-orderSchema.index({ status: 1 });
+orderSchema.index({
+    status: 1
+});
 
-orderSchema.index({ paymentStatus: 1 });
+orderSchema.index({
+    paymentStatus: 1
+});
 
-orderSchema.index({ phone: 1 });
+orderSchema.index({
+    phone: 1
+});
 
-orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({
+    user: 1,
+    createdAt: -1
+});
 
 orderSchema.index({
     whatsappStatus: 1,
     createdAt: -1
 });
 
+orderSchema.index({
+    razorpay_payment_id: 1
+});
 
-// ===============================
+orderSchema.index({
+    trackingId: 1
+});
+
+orderSchema.index({
+    isArchived: 1
+});
+
+
+// ======================================
 // EXPORT
-// ===============================
-module.exports = mongoose.model("Order", orderSchema);  
+// ======================================
+module.exports =
+    mongoose.model(
+        "Order",
+        orderSchema
+    );

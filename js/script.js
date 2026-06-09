@@ -1,416 +1,1163 @@
+// ======================================
+// CONFIG
+// ======================================
+const DEBUG =
+    window.location.hostname ===
+    "localhost";
 
-// =========================
-// 🔥 GLOBAL SAFE EVENT HANDLER (NEW ADDITION)
-// =========================
-function safeAddListener(id, event, handler) {
-    const el = document.getElementById(id);
+
+// ======================================
+// LOGGER
+// ======================================
+function log(...args) {
+
+    if (DEBUG) {
+
+        console.log(...args);
+    }
+}
+
+
+// ======================================
+// SAFE EVENT LISTENER
+// ======================================
+function safeAddListener(
+    id,
+    event,
+    handler
+) {
+
+    const el =
+        document.getElementById(id);
+
     if (!el) {
-        console.warn(`❌ ${id} not found (listener skipped)`);
+
+        console.warn(
+            `⚠ ${id} not found`
+        );
+
         return;
     }
-    el.addEventListener(event, handler);
+
+    el.addEventListener(
+        event,
+        handler
+    );
 }
 
 
-// =========================
-// 🔥 SAFE QUERY SELECTOR (NEW ADDITION)
-// =========================
-function safeQuery(parent, selector) {
+// ======================================
+// SAFE QUERY
+// ======================================
+function safeQuery(
+    parent,
+    selector
+) {
+
     if (!parent) return null;
-    return parent.querySelector(selector);
+
+    return parent.querySelector(
+        selector
+    );
 }
 
 
-// =========================
-// 🔥 SAFE PRICE PARSER (NEW ADDITION)
-// =========================
-function safePrice(text) {
-    if (!text) return 0;
-    return parseInt(text.replace("₹","")) || 0;
-}
+// ======================================
+// SAFE PRICE PARSER
+// ======================================
+function normalizePrice(price) {
 
+    if (
+        typeof price === "number"
+    ) {
 
-// =========================
-// 🔥 SAFE IMAGE GETTER (NEW ADDITION)
-// =========================
-function safeImage(card) {
-    const img = card.querySelector("img");
-    return img ? img.src : "";
-}
-
-
-// =========================
-// 🔥 HARD TYPE FIX (CRITICAL 🔥🔥🔥)
-// =========================
-function normalizePrice(price){
-    return Number(price) || 0;
-}
-
-
-// =========================
-// 🔥 BUTTON LOCK (ANTI SPAM 🔥)
-// =========================
-function lockButton(btn){
-    if(!btn) return;
-    btn.disabled = true;
-    setTimeout(()=> btn.disabled = false, 800);
-}
-
-
-// =========================
-// 🔥 SAFE HTML ESCAPE (SECURITY)
-// =========================
-function escapeHTML(str){
-    return String(str || "").replace(/[&<>"']/g, function(m){
-        return ({
-            "&":"&amp;",
-            "<":"&lt;",
-            ">":"&gt;",
-            '"':"&quot;",
-            "'":"&#039;"
-        })[m];
-    });
-}
-
-
-// =========================
-// 🔥 TOAST SYSTEM (NEW UX ADDITION)
-// =========================
-function showToast(message){
-    let toast = document.getElementById("globalToast");
-
-    if(!toast){
-        toast = document.createElement("div");
-        toast.id = "globalToast";
-        toast.style.position = "fixed";
-        toast.style.bottom = "20px";
-        toast.style.right = "20px";
-        toast.style.background = "#333";
-        toast.style.color = "#fff";
-        toast.style.padding = "12px 18px";
-        toast.style.borderRadius = "8px";
-        toast.style.zIndex = "9999";
-        toast.style.opacity = "0";
-        toast.style.transition = "0.3s";
-        document.body.appendChild(toast);
+        return price;
     }
 
-    toast.innerText = message;
-    toast.style.opacity = "1";
+    return Number(
 
-    setTimeout(()=> toast.style.opacity = "0", 2500);
+        String(price)
+            .replace(/[^\d.]/g, "")
+
+    ) || 0;
 }
 
 
-// =========================
-// 🔥 DEBOUNCE (NEW)
-// =========================
-function debounce(fn, delay = 300){
-    let timer;
-    return (...args)=>{
-        clearTimeout(timer);
-        timer = setTimeout(()=> fn(...args), delay);
-    };
+// ======================================
+// SAFE IMAGE
+// ======================================
+function safeImage(card) {
+
+    const img =
+        safeQuery(card, "img");
+
+    return img?.src || "";
 }
 
 
-// =========================
-// ✅ SINGLE AUTH SOURCE
-// =========================
+// ======================================
+// HTML ESCAPE
+// ======================================
+function escapeHTML(str) {
+
+    return String(str || "")
+        .replace(/[&<>"']/g, (m) => ({
+
+            "&": "&amp;",
+
+            "<": "&lt;",
+
+            ">": "&gt;",
+
+            '"': "&quot;",
+
+            "'": "&#039;"
+
+        })[m]);
+}
+
+
+// ======================================
+// BUTTON LOCK
+// ======================================
+function lockButton(btn) {
+
+    if (!btn) return;
+
+    btn.disabled = true;
+
+    btn.style.opacity = "0.7";
+
+    setTimeout(() => {
+
+        btn.disabled = false;
+
+        btn.style.opacity = "1";
+
+    }, 800);
+}
+
+
+// ======================================
+// TOAST SYSTEM
+// ======================================
+function showToast(
+    message,
+    type = "info"
+) {
+
+    let toast =
+        document.getElementById(
+            "globalToast"
+        );
+
+    if (!toast) {
+
+        toast =
+            document.createElement("div");
+
+        toast.id = "globalToast";
+
+        toast.style.position =
+            "fixed";
+
+        toast.style.bottom =
+            "20px";
+
+        toast.style.right =
+            "20px";
+
+        toast.style.padding =
+            "12px 18px";
+
+        toast.style.borderRadius =
+            "10px";
+
+        toast.style.zIndex =
+            "9999";
+
+        toast.style.transition =
+            "0.3s";
+
+        toast.style.opacity =
+            "0";
+
+        toast.style.color =
+            "#fff";
+
+        toast.style.background =
+            "#222";
+
+        document.body.appendChild(
+            toast
+        );
+    }
+
+    toast.innerText =
+        message;
+
+    toast.style.opacity =
+        "1";
+
+    clearTimeout(
+        toast.hideTimeout
+    );
+
+    toast.hideTimeout =
+        setTimeout(() => {
+
+            toast.style.opacity =
+                "0";
+
+        }, 2500);
+}
+
+
+// ======================================
+// USER CACHE
+// ======================================
+let __cachedUser = null;
+
+
+// ======================================
+// GET CURRENT USER
+// ======================================
 async function getCurrentUser() {
+
     try {
-        const res = await fetch("http://https://makhana-website.onrender.com/api/auth/check", {
-            credentials: "include"
-        });
 
-        if (!res.ok) return null;
+        const response =
 
-        const data = await res.json();
+            await API.auth.check();
 
-        console.log("✅ Current user:", data.user);
 
-        return data.user;
+        if (
+            response.success &&
+            response.user
+        ) {
+
+            return response.user;
+        }
+
+        return null;
 
     } catch (err) {
-        console.error("Auth error:", err);
+
+        console.error(
+            "❌ Auth check failed:",
+            err
+        );
+
         return null;
     }
 }
 
 
-// =========================
-// 🔥 USER CACHE
-// =========================
-let __cachedUser = null;
+// ======================================
+// GET CACHED USER
+// ======================================
 async function getCachedUser() {
-    if (__cachedUser) return __cachedUser;
-    __cachedUser = await getCurrentUser();
+
+    if (__cachedUser) {
+
+        return __cachedUser;
+    }
+
+    __cachedUser =
+        await getCurrentUser();
+
     return __cachedUser;
 }
 
 
-// =========================
-// 🔥 SAFE FETCH WRAPPER
-// =========================
-// =========================
-// 🔥 SAFE FETCH WRAPPER (AUTH FIX)
-// =========================
-async function safeFetch(url, options = {}) {
+// ======================================
+// USER DISPLAY
+// ======================================
+const userSection =
+    document.getElementById(
+        "userSection"
+    );
 
-    try {
-
-        // =====================
-        // TOKEN SUPPORT
-        // =====================
-        const token =
-            localStorage.getItem("token") ||
-            sessionStorage.getItem("token") ||
-            "";
-
-        const res = await fetch(url, {
-
-            credentials: "include",
-
-            headers: {
-
-                "Content-Type": "application/json",
-
-                // ✅ CRITICAL FIX
-                ...(token && {
-                    Authorization: `Bearer ${token}`
-                }),
-
-                ...(options.headers || {})
-            },
-
-            ...options
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-        return {
-            ok: res.ok,
-            status: res.status,
-            data
-        };
-
-    } catch (err) {
-
-        console.error("Fetch error:", err);
-
-        return {
-            ok: false,
-            status: 500,
-            data: {
-                message: "Network error"
-            }
-        };
-    }
-}
-
-// =========================
-// USER LOGIN DISPLAY
-// =========================
-const userSection = document.getElementById("userSection");
 
 (async () => {
-    const user_main = await getCachedUser();
 
-    if (user_main && userSection) {
+    const user =
+        await getCachedUser();
+
+    if (
+        user &&
+        userSection
+    ) {
+
         userSection.innerHTML = `
-            Hello, ${escapeHTML(user_main.name)} 👋 
-            <button onclick="logout()" style="margin-left:10px;">Logout</button>
+            Hello, ${escapeHTML(user.name)} 👋
+            <button onclick="logout()" style="margin-left:10px;">
+                Logout
+            </button>
         `;
     }
+
 })();
 
 
-// =========================
+// ======================================
 // LOGOUT
-// =========================
+// ======================================
 async function logout() {
-    await fetch("http://https://makhana-website.onrender.com/api/auth/logout", {
-        method: "POST",
-        credentials: "include"
-    });
 
-    window.location.href = "login.html";
-}
+    try {
 
+        await API.auth.logout();
 
-// =========================
-// 🔥 ADD TO CART (FINAL FIX 🔥🔥🔥)
-// =========================
-async function addToCart(btn, name, price, image) {
+        localStorage.removeItem(
+            "user"
+        );
 
-    lockButton(btn);
+        sessionStorage.clear();
 
-    const user = await getCachedUser();
+        showToast(
+            "Logged out successfully"
+        );
 
-    if (!user) {
-        showToast("Please login first");
-        window.location.href = "login.html";
-        return;
-    }
+        setTimeout(() => {
 
-    const fixedPrice = normalizePrice(price);
+            window.location.href =
+                "login.html";
 
-    if (!name || !fixedPrice) {
-        console.warn("Invalid cart data");
-        return;
-    }
+        }, 500);
 
-    const { ok, data } = await safeFetch("http://https://makhana-website.onrender.com/api/cart/add", {
-        method: "POST",
-        body: JSON.stringify({
-            name: escapeHTML(name),
-            price: fixedPrice,
-            image,
-            productId: name
-        })
-    });
+    } catch (err) {
 
-    if (ok) {
-        showToast("Added to cart ✅");
-        loadCartCount();
-        loadCartPage();
-    } else {
-        console.error("Cart API failed", data);
-        showToast(data.message || "Failed to add to cart");
+        console.error(
+            "❌ Logout failed:",
+            err
+        );
+
+        showToast(
+            "Logout failed"
+        );
     }
 }
 
 
-// =========================
-// QTY CONTROL
-// =========================
-function increaseQty(btn){
-    let card = btn.closest(".card");
-    if(!card) return;
+// ======================================
+// ADD TO CART
+// ======================================
+async function addToCart(
 
-    let name = safeQuery(card, "h3")?.innerText;
-    let price = safePrice(safeQuery(card, ".price")?.innerText);
-    let img = safeImage(card);
+    btn,
 
-    addToCart(btn,name,price,img);
+    productId,
+
+    name,
+
+    price,
+
+    image
+
+){
+
+    try {
+
+        lockButton(btn);
+
+        const user =
+            await getCachedUser();
+
+        if (!user) {
+
+            showToast(
+                "Please login first"
+            );
+
+            return setTimeout(() => {
+
+                window.location.href =
+                    "login.html";
+
+            }, 1000);
+        }
+
+
+        const fixedPrice =
+            normalizePrice(price);
+
+
+        if (
+            !name ||
+            fixedPrice <= 0
+        ) {
+
+            console.warn(
+                "⚠ Invalid product"
+            );
+
+            return;
+        }
+
+
+        const response =
+
+            await API.post(
+
+    "/cart/add",
+
+    {
+
+        productId,
+
+        name:
+            escapeHTML(name),
+
+        price:
+            fixedPrice,
+
+        image
+    }
+);
+
+
+        if (
+            response.success
+        ) {
+
+            showToast(
+                "Added to cart ✅"
+            );
+
+            loadCartCount();
+
+            loadCartPage();
+
+        } else {
+
+            showToast(
+
+                response.message ||
+
+                "Failed to add"
+            );
+        }
+
+    } catch (err) {
+
+        console.error(
+            "❌ Add cart error:",
+            err
+        );
+
+        showToast(
+            "Cart operation failed"
+        );
+    }
 }
 
-function decreaseQty(btn){
-    showToast("Use cart page to decrease quantity ❗");
+
+// ======================================
+// QUANTITY CONTROLS
+// ======================================
+function increaseQty(btn) {
+
+    const card =
+        btn.closest(".card");
+
+    if (!card) return;
+
+
+    const name =
+        safeQuery(card, "h3")
+            ?.innerText;
+
+
+    const price =
+        normalizePrice(
+
+            safeQuery(
+                card,
+                ".price"
+            )?.innerText
+        );
+
+
+    const image =
+        safeImage(card);
+
+
+    addToCart(
+        btn,
+        name,
+        price,
+        image
+    );
 }
 
 
-// =========================
-// 🔥 LOAD CART PAGE
-// =========================
+function decreaseQty() {
+
+    showToast(
+        "Use cart page to decrease quantity"
+    );
+}
+
+
+// ======================================
+// LOAD CART PAGE
+// ======================================
 async function loadCartPage() {
 
-    const container = document.getElementById("cart-container");
-    if (!container) return;
+    try {
 
-    const user = await getCachedUser();
-    if (!user) {
-        container.innerHTML = "Please login";
-        return;
-    }
+        const container =
+            document.getElementById(
+                "cart-container"
+            );
 
-    const { ok, data } = await safeFetch(`http://https://makhana-website.onrender.com/api/cart/${user._id}`);
+        if (!container) return;
 
-    if (!ok) {
-        container.innerHTML = "Failed to load cart ❌";
-        return;
-    }
 
-    const items = data.items || [];
+        const user =
+            await getCachedUser();
 
-    if (items.length === 0) {
-        container.innerHTML = "<h3>Your cart is empty 😢</h3>";
-        return;
-    }
+        if (!user) {
 
-    let html = "";
+            container.innerHTML =
+                "Please login";
 
-    items.forEach(item => {
+            return;
+        }
+
+
+        const response =
+            await API.get(
+
+                `/cart/${user._id}`
+            );
+
+
+        if (
+            !response.success
+        ) {
+
+            container.innerHTML =
+                "Failed to load cart";
+
+            return;
+        }
+
+
+        const items =
+            response.items || [];
+
+
+        if (
+            items.length === 0
+        ) {
+
+            container.innerHTML = `
+                <h3>Your cart is empty 😢</h3>
+            `;
+
+            return;
+        }
+
+
+        let html = "";
+
+        let total = 0;
+
+
+        items.forEach(item => {
+
+            total +=
+                normalizePrice(
+                    item.price
+                ) *
+                (item.quantity || 1);
+
+
+            html += `
+                <div class="cart-item">
+
+                    <img 
+                        src="${escapeHTML(item.image)}" 
+                        width="80"
+                        loading="lazy"
+                    />
+
+                    <div>
+
+                        <h3>
+                            ${escapeHTML(item.name)}
+                        </h3>
+
+                        <p>
+                            ₹${item.price}
+                        </p>
+
+                        <button onclick="updateCart('${escapeHTML(item.name)}','decrease')">
+                            -
+                        </button>
+
+                        ${item.quantity}
+
+                        <button onclick="updateCart('${escapeHTML(item.name)}','increase')">
+                            +
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+        });
+
+
         html += `
-        <div class="cart-item">
-            <img src="${item.image}" width="80"/>
-            <div>
-                <h3>${escapeHTML(item.name)}</h3>
-                <p>₹${item.price}</p>
-
-                <button onclick="updateCart('${item.name}','decrease')">-</button>
-                ${item.quantity}
-                <button onclick="updateCart('${item.name}','increase')">+</button>
-            </div>
-        </div>
+            <h2 style="margin-top:20px;">
+                Total: ₹${total}
+            </h2>
         `;
-    });
 
-    container.innerHTML = html;
+
+        container.innerHTML =
+            html;
+
+    } catch (err) {
+
+        console.error(
+            "❌ Cart load failed:",
+            err
+        );
+    }
 }
 
 
-// =========================
-// 🔥 UPDATE CART
-// =========================
-async function updateCart(name, action) {
+// ======================================
+// UPDATE CART
+// ======================================
+async function updateCart(
+    name,
+    action
+) {
 
-    const user = await getCachedUser();
-    if (!user) return;
+    try {
 
-    await safeFetch("http://https://makhana-website.onrender.com/api/cart/update", {
-        method: "POST",
-        body: JSON.stringify({ name, action })
-    });
+        const response =
+            await API.post(
 
-    loadCartPage();
-    loadCartCount();
+                "/cart/update",
+
+                {
+                    name,
+                    action
+                }
+            );
+
+
+        if (
+            response.success
+        ) {
+
+            loadCartPage();
+
+            loadCartCount();
+
+        } else {
+
+            showToast(
+                "Cart update failed"
+            );
+        }
+
+    } catch (err) {
+
+        console.error(
+            "❌ Cart update error:",
+            err
+        );
+    }
 }
 
 
-// =========================
-// 🔥 LOAD CART COUNT
-// =========================
+// ======================================
+// CART COUNT
+// ======================================
 async function loadCartCount() {
-    const user = await getCachedUser();
-    if (!user) return;
 
-    const { ok, data } = await safeFetch(`http://https://makhana-website.onrender.com/api/cart/count/${user._id}`);
+    try {
 
-    if (ok) {
-        const cartIcon = document.getElementById("cartCount");
-        if (cartIcon) {
-            cartIcon.innerText = data.count || 0;
+        const user =
+            await getCachedUser();
+
+        if (!user) return;
+
+
+        const response =
+            await API.get(
+
+                `/cart/count/${user._id}`
+            );
+
+
+        if (
+            response.success
+        ) {
+
+            const cartIcon =
+                document.getElementById(
+                    "cartCount"
+                );
+
+            if (cartIcon) {
+
+                cartIcon.innerText =
+                    response.count || 0;
+            }
+        }
+
+    } catch (err) {
+
+        console.error(
+            "❌ Cart count failed:",
+            err
+        );
+    }
+}
+
+// ======================================
+// AUTO LOAD
+// ======================================
+window.addEventListener(
+
+    "DOMContentLoaded",
+
+    async () => {
+
+        try {
+
+            // LOAD CART PAGE SAFELY
+            if (
+                typeof loadCartPage ===
+                "function"
+            ) {
+
+                await loadCartPage();
+            }
+
+            // LOAD CART COUNT SAFELY
+            if (
+                typeof loadCartCount ===
+                "function"
+            ) {
+
+                await loadCartCount();
+            }
+
+            // ======================================
+            // LOAD WISHLIST UI
+            // ======================================
+            if (
+                typeof syncWishlistUI ===
+                "function"
+            ) {
+
+                await syncWishlistUI();
+            }
+
+        } catch (error) {
+
+            console.error(
+                "❌ Auto load failed:",
+                error
+            );
         }
     }
+);
+
+
+// ======================================
+// GLOBAL EXPORTS
+// ======================================
+if (typeof addToCart === "function") {
+
+    window.addToCart =
+        addToCart;
+}
+
+if (typeof logout === "function") {
+
+    window.logout =
+        logout;
+}
+
+if (typeof increaseQty === "function") {
+
+    window.increaseQty =
+        increaseQty;
+}
+
+if (typeof decreaseQty === "function") {
+
+    window.decreaseQty =
+        decreaseQty;
+}
+
+if (typeof updateCart === "function") {
+
+    window.updateCart =
+        updateCart;
+}
+
+if (typeof addToWishlist === "function") {
+
+    window.addToWishlist =
+        addToWishlist;
+}
+
+if (typeof syncWishlistUI === "function") {
+
+    window.syncWishlistUI =
+        syncWishlistUI;
+}
+
+if (typeof updateWishlistCount === "function") {
+
+    window.updateWishlistCount =
+        updateWishlistCount;
 }
 
 
-// =========================
-// AUTO LOAD
-// =========================
-window.addEventListener("DOMContentLoaded", () => {
-    loadCartPage();
-    loadCartCount();
-});
+// ======================================
+// GLOBAL ERROR HANDLING
+// ======================================
+window.addEventListener(
+
+    "error",
+
+    (e) => {
+
+        console.error(
+
+            "🔥 Global Error:",
+
+            {
+
+                message: e.message,
+
+                file: e.filename,
+
+                line: e.lineno,
+
+                column: e.colno
+            }
+        );
+    }
+);
 
 
-// =========================
-// GLOBAL EXPORTS
-// =========================
-window.addToCart = addToCart;
-window.logout = logout;
-window.increaseQty = increaseQty;
-window.decreaseQty = decreaseQty;
+window.addEventListener(
+
+    "unhandledrejection",
+
+    (e) => {
+
+        console.error(
+
+            "🔥 Promise Error:",
+
+            e.reason
+        );
+    }
+);
+
+// ======================================
+// ADD TO WISHLIST
+// ======================================
+
+// ======================================
+// WISHLIST CACHE
+// ======================================
+
+let wishlistProducts = [];
 
 
-// =========================
-// ERROR HANDLING
-// =========================
-window.addEventListener("error", (e) => {
-    console.error("Global Error:", e.message);
-});
+// ======================================
+// LOAD USER WISHLIST
+// ======================================
 
-window.addEventListener("unhandledrejection", (e) => {
-    console.error("Unhandled Promise Error:", e.reason);
-});
+async function loadWishlist() {
+
+    try {
+
+        const user =
+            await getCachedUser();
+
+        if (!user) return [];
+
+        const response =
+            await fetch(
+                "/api/wishlist",
+                {
+                    credentials: "include"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            return [];
+        }
+
+        wishlistProducts =
+            data.wishlist.products.map(
+                p => p._id
+            );
+
+        return wishlistProducts;
+
+    } catch (err) {
+
+        console.error(
+            "Wishlist load failed",
+            err
+        );
+
+        return [];
+    }
+}
+
+// ======================================
+// TOGGLE WISHLIST
+// ======================================
+
+async function addToWishlist(
+    btn,
+    productId
+) {
+
+    try {
+
+        const user =
+            await getCachedUser();
+
+        if (!user) {
+
+            showToast(
+                "Please login first"
+            );
+
+            return;
+        }
+
+        const icon =
+            btn.querySelector("i");
+
+        const isWishlisted =
+            wishlistProducts.includes(
+                productId
+            );
+
+        const url =
+            isWishlisted
+
+                ? `/api/wishlist/remove/${productId}`
+
+                : `/api/wishlist/add/${productId}`;
+
+        const method =
+            isWishlisted
+
+                ? "DELETE"
+
+                : "POST";
+
+        const response =
+            await fetch(
+                url,
+                {
+                    method,
+                    credentials:
+                        "include"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message
+            );
+        }
+
+        if (isWishlisted) {
+
+            wishlistProducts =
+                wishlistProducts.filter(
+                    id =>
+                        id !== productId
+                );
+
+            if (icon) {
+
+                icon.classList.remove(
+                    "fa-solid"
+                );
+
+                icon.classList.add(
+                    "fa-regular"
+                );
+
+                icon.style.color =
+                    "";
+            }
+
+            showToast(
+                "Removed from wishlist ❌"
+            );
+
+        } else {
+
+            wishlistProducts.push(
+                productId
+            );
+
+            if (icon) {
+
+                icon.classList.remove(
+                    "fa-regular"
+                );
+
+                icon.classList.add(
+                    "fa-solid"
+                );
+
+                icon.style.color =
+                    "red";
+            }
+
+            showToast(
+                "Added to wishlist ❤️"
+            );
+        }
+
+        updateWishlistCount();
+
+    } catch (err) {
+
+        console.error(err);
+
+        showToast(
+            "Wishlist operation failed"
+        );
+    }
+}
+
+// ======================================
+// WISHLIST COUNT
+// ======================================
+
+async function updateWishlistCount() {
+
+    try {
+
+        const countElement =
+            document.getElementById(
+                "wishlistCount"
+            );
+
+        if (!countElement) return;
+
+        const count =
+            wishlistProducts.length;
+
+        countElement.innerText =
+            count;
+
+        if (count === 0) {
+
+            countElement.style.display =
+                "none";
+
+        } else {
+
+            countElement.style.display =
+                "flex";
+        }
+
+    } catch (err) {
+
+        console.error(err);
+    }
+}
+// ======================================
+// HEART SYNC
+// ======================================
+
+async function syncWishlistUI() {
+
+    await loadWishlist();
+
+    document
+        .querySelectorAll(
+            ".wishlist-btn"
+        )
+
+        .forEach(btn => {
+
+            const onclick =
+                btn.getAttribute(
+                    "onclick"
+                );
+
+            if (!onclick) return;
+
+            const match =
+                onclick.match(
+                    /'([^']+)'/
+                );
+
+            if (!match) return;
+
+            const productId =
+                match[1];
+
+            const icon =
+                btn.querySelector(
+                    "i"
+                );
+
+            if (
+
+                wishlistProducts.includes(
+                    productId
+                )
+
+            ) {
+
+                icon.classList.remove(
+                    "fa-regular"
+                );
+
+                icon.classList.add(
+                    "fa-solid"
+                );
+
+                icon.style.color =
+                    "red";
+            }
+        });
+
+    updateWishlistCount();
+}
+
+window.addToWishlist =
+    addToWishlist;
+
+window.syncWishlistUI =
+    syncWishlistUI;
+
+window.updateWishlistCount =
+    updateWishlistCount;

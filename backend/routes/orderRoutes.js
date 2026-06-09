@@ -1,183 +1,193 @@
 const express = require("express");
-const Cart = require("../models/Cart");
-const Order = require("../models/Order");
-const Razorpay = require("razorpay");
+
 const crypto = require("crypto");
 
-// ✅ FIXED IMPORT (VERY IMPORTANT)
-const { protect } = require("../middleware/authMiddleware");
+const mongoose = require("mongoose");
+
+const Razorpay = require("razorpay");
+
+const Cart = require("../models/Cart");
+
+const Order = require("../models/Order");
+
+const {
+    protect
+} = require("../middleware/authMiddleware");
+
 
 const router = express.Router();
 
 
-// =======================
-// 🔥 DEBUG FLAG (NEW)
-// =======================
-const DEBUG = process.env.DEBUG === "true";
+// ======================================
+// DEBUG FLAG
+// ======================================
+const DEBUG =
+    process.env.DEBUG === "true";
 
 
-// =======================
-// 🧠 NEW HELPERS (NON-BREAKING)
-// =======================
+// ======================================
+// ENV VALIDATION
+// ======================================
+[
+    "RAZORPAY_KEY_ID",
+    "RAZORPAY_KEY_SECRET"
+].forEach((key) => {
 
-// Centralized userId getter
-const getUserId = (req) => req.user?._id || req.userId;
+    if (!process.env[key]) {
 
-// Safe number validator
-const isValidNumber = (val) => typeof val === "number" && !isNaN(val);
+        console.warn(
+            `⚠ Missing ENV: ${key}`
+        );
+    }
+});
 
-// Calculate total safely
-const calculateCartTotal = (items = []) => {
-    return items.reduce((acc, item) => {
-        if (!item.price || !item.quantity) return acc;
-        return acc + item.price * item.quantity;
-    }, 0);
+
+// ======================================
+// RAZORPAY INSTANCE
+// ======================================
+const razorpay =
+    new Razorpay({
+
+        key_id:
+            process.env.RAZORPAY_KEY_ID,
+
+        key_secret:
+            process.env.RAZORPAY_KEY_SECRET
+    });
+
+
+// ======================================
+// HELPERS
+// ======================================
+const getUserId = (req) => {
+
+    return (
+        req.user?._id ||
+        req.userId
+    );
 };
 
 
-// =======================
-// 🔥 SAFE ASYNC WRAPPER (NEW)
-// =======================
-const safeAsync = (fn) => async (req, res, next = () => {}) => {
-    try {
+const isValidObjectId = (
+    id
+) => {
 
-        await fn(req, res, next);
-
-    } catch (err) {
-
-        console.error("🔥 ORDER ROUTE ERROR:", err);
-
-        res.status(500).json({
-            success: false,
-            message: "Internal server error",
-            error: err.message
-        });
-    }
+    return mongoose.Types.ObjectId.isValid(id);
 };
 
 
-// =======================
-// 🔥 SANITIZER (NEW)
-// =======================
-const sanitizeString = (str) =>
-    String(str || "").replace(/[<>]/g, "").trim();
+const sanitizeString = (
+    str
+) => {
+
+    return String(str || "")
+        .replace(/[<>]/g, "")
+        .trim();
+};
 
 
-// =======================
-// 🔒 ENV WARNING (NEW)
-// =======================
-if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET) {
-    console.warn("⚠️ Razorpay ENV missing — fallback being used");
-}
+const calculateCartTotal = (
+    items = []
+) => {
+
+    return items.reduce(
+
+        (acc, item) => {
+
+            const price =
+                Number(item.price) || 0;
+
+            const qty =
+                Number(item.quantity) || 0;
+
+            return acc + (
+                price * qty
+            );
+
+        },
+
+        0
+    );
+};
 
 
-// =======================
-// 🆕 DEBUG ROUTE (NEW)
-// =======================
-router.get("/debug", protect, (req, res) => {
-    res.json({
-        success: true,
-        user: req.user,
-        message: "Order debug working"
-    });
-});
+const createTimelineEvent = (
+    status,
+    message
+) => {
+
+    return {
+
+        status,
+
+        message,
+
+        createdAt:
+            new Date()
+    };
+};
 
 
-// =======================
-// 🆕 COD ORDER (NEW FEATURE)
-// =======================
-router.post("/place", protect, safeAsync(async (req, res) => {
-    const { name, phone, address } = req.body;
-    const userId = getUserId(req);
+// ======================================
+// SAFE ASYNC WRAPPER
+// ======================================
+const safeAsync = (fn) => {
 
-    if (!name || !phone || !address) {
-        return res.status(400).json({
-            success: false,
-            message: "All fields required"
+    return async (
+        req,
+        res,
+        next
+    ) => {
+
+        try {
+
+            await fn(
+                req,
+                res,
+                next
+            );
+
+        } catch (err) {
+
+            console.error(
+                "❌ ORDER ROUTE ERROR:",
+                err
+            );
+
+            next(err);
+        }
+    };
+};
+
+
+// ======================================
+// FIND OR CREATE CART
+// ======================================
+const ensureCart = async (
+    userId
+) => {
+
+    let cart =
+        await Cart.findOne({
+
+            $or: [
+                { user: userId },
+                { userId }
+            ]
         });
-    }
 
-    if (phone.length < 10) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid phone"
-        });
-    }
-
-    const cart = await Cart.findOne({
-        $or: [{ user: userId }, { userId }]
-    });
-
-    if (!cart || cart.items.length === 0) {
-        return res.status(400).json({
-            success: false,
-            message: "Cart empty"
-        });
-    }
-
-    const total = calculateCartTotal(cart.items);
-
-    const order = new Order({
-        user: userId,
-        userId,
-        items: cart.items,
-        totalAmount: total,
-        name: sanitizeString(name),
-        phone: sanitizeString(phone),
-        address: sanitizeString(address),
-        payment: "COD",
-        status: "Pending"
-    });
-
-    await order.save();
-
-    // 🔥 SAFE CART CLEAR (NEW)
-    cart.items = [];
-    await cart.save();
-
-    if (DEBUG) console.log("📦 COD ORDER CREATED:", order._id);
-
-    res.json({
-        success: true,
-        message: "COD order placed",
-        orderId: order._id
-    });
-}));
-
-
-// =======================
-// ✅ RAZORPAY INSTANCE
-// =======================
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
-
-console.log("KEY:", process.env.RAZORPAY_KEY_ID);
-console.log("SECRET:", process.env.RAZORPAY_KEY_SECRET);
-
-// =======================
-// ✅ TEST ROUTE (PROTECTED)
-// =======================
-router.get("/test", protect, (req, res) => {
-    res.send("Order route working ✅");
-});
-
-
-// =======================
-// 🔥 ENSURE CART (NEW SAFETY)
-// =======================
-const ensureCart = async (userId) => {
-    let cart = await Cart.findOne({
-        $or: [{ user: userId }, { userId }]
-    });
 
     if (!cart) {
+
         cart = new Cart({
+
             user: userId,
+
             userId,
+
             items: []
         });
+
         await cart.save();
     }
 
@@ -185,205 +195,404 @@ const ensureCart = async (userId) => {
 };
 
 
-// =======================
-// ✅ CREATE RAZORPAY ORDER (UPGRADED)
-// =======================
-router.post("/create-order", protect, safeAsync(async (req, res) => {
-    const userId = getUserId(req);
+// ======================================
+// SAFE ORDER RESPONSE
+// ======================================
+const formatOrder = (
+    order
+) => {
 
-    const cart = await ensureCart(userId);
+    try {
 
-    if (!cart || cart.items.length === 0) {
-        return res.status(400).json({
-            success: false,
-            message: "Cart is empty"
-        });
+        return order.toJSON
+            ? order.toJSON()
+            : order;
+
+    } catch {
+
+        return order;
     }
-
-    let total = calculateCartTotal(cart.items);
-
-    if (!isValidNumber(total) || total <= 0) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid cart total"
-        });
-    }
-    console.log("TOTAL:", total);
-console.log("USER ID:", userId);
-console.log("CART:", cart);
-
-    const options = {
-        amount: total * 100,
-        currency: "INR",
-        receipt: "receipt_" + Date.now()
-    };
-
-    let order;
-
-try {
-
-    console.log("RAZORPAY OPTIONS:", options);
-    console.log("KEY:", process.env.RAZORPAY_KEY_ID);
-    console.log("SECRET EXISTS:", !!process.env.RAZORPAY_KEY_SECRET);
-
-    order = await razorpay.orders.create(options);
-
-    console.log("RAZORPAY ORDER CREATED:", order);
-
-} catch (err) {
-
-    console.log("RAZORPAY CREATE ERROR:", err);
-
-    return res.status(500).json({
-        success: false,
-        error: err.message,
-        details: err
-    });
-}
-
-res.json({
-    success: true,
-    orderId: order.id,
-    amount: total,
-    key: process.env.RAZORPAY_KEY_ID
-});
-}));
+};
 
 
-// =======================
-// ✅ VERIFY PAYMENT + SAVE ORDER (UPGRADED)
-// =======================
-router.post("/verify", protect, safeAsync(async (req, res) => {
+// ======================================
+// HEALTH CHECK
+// ======================================
+router.get(
+    "/health",
+    (req, res) => {
 
-    const {
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-        name,
-        phone,
-        address,
-        city,
-        pincode
-    } = req.body;
-
-    const userId = getUserId(req);
-
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid payment data"
-        });
-    }
-
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-
-    const expectedSignature = crypto
-    .createHmac(
-        "sha256",
-        process.env.RAZORPAY_KEY_SECRET
-    )
-    .update(body.toString())
-    .digest("hex");
-
-    if (expectedSignature !== razorpay_signature) {
-        return res.status(400).json({
-            success: false,
-            message: "Payment verification failed"
-        });
-    }
-
-    // 🔥 PREVENT DUPLICATE ORDER
-    const existingOrder = await Order.findOne({
-        razorpay_payment_id
-    });
-
-    if (existingOrder) {
         return res.json({
+
             success: true,
-            message: "Order already processed",
-            orderId: existingOrder._id      
+
+            service:
+                "order-service"
         });
     }
+);
 
-    const cart = await ensureCart(userId);
 
-    if (!cart || cart.items.length === 0) {
-        return res.status(400).json({
+// ======================================
+// CREATE COD ORDER
+// ======================================
+router.post(
+
+    "/place",
+
+    protect,
+
+    safeAsync(async (
+        req,
+        res
+    ) => {
+
+        const {
+            name,
+            phone,
+            address,
+            city,
+            state,
+            pincode
+        } = req.body;
+
+
+        const userId =
+            getUserId(req);
+
+
+        // VALIDATION
+        if (
+            !name ||
+            !phone ||
+            !address
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "All fields required"
+            });
+        }
+
+
+        if (
+            !/^[0-9]{10}$/.test(
+                String(phone)
+            )
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid phone number"
+            });
+        }
+
+
+        const cart =
+            await ensureCart(userId);
+
+
+        if (
+            !cart.items ||
+            cart.items.length === 0
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Cart is empty"
+            });
+        }
+
+
+        const total =
+            calculateCartTotal(
+                cart.items
+            );
+
+
+        const order =
+            new Order({
+
+                user:
+                    userId,
+
+                userId,
+
+                items:
+                    cart.items,
+
+                total,
+
+                totalAmount:
+                    total,
+
+                finalAmount:
+                    total,
+
+                name:
+                    sanitizeString(name),
+
+                phone:
+                    sanitizeString(phone),
+
+                address:
+                    sanitizeString(address),
+
+                city:
+                    sanitizeString(city),
+
+                state:
+                    sanitizeString(state),
+
+                pincode:
+                    sanitizeString(pincode),
+
+                payment:
+                    "COD",
+
+                paymentMethod:
+                    "COD",
+
+                paymentStatus:
+                    "PENDING",
+
+                status:
+                    "Pending",
+
+                timeline: [
+
+                    createTimelineEvent(
+
+                        "Pending",
+
+                        "COD order created"
+                    )
+                ]
+            });
+
+
+        await order.save();
+
+
+        // CLEAR CART
+        cart.items = [];
+
+        await cart.save();
+
+
+        if (DEBUG) {
+
+            console.log(
+                "📦 COD ORDER:",
+                order._id
+            );
+        }
+
+
+        return res.json({
+
+            success: true,
+
+            message:
+                "Order placed successfully",
+
+            order:
+                formatOrder(order)
+        });
+    })
+);
+
+
+
+// ======================================
+// GET USER ORDERS
+// ======================================
+router.get(
+
+    "/",
+
+    protect,
+
+    safeAsync(async (
+        req,
+        res
+    ) => {
+
+        const userId =
+            getUserId(req);
+
+
+        const page =
+            Number(req.query.page) || 1;
+
+        const limit =
+            Number(req.query.limit) || 10;
+
+        const skip =
+            (page - 1) * limit;
+
+
+        const orders =
+            await Order.find({
+
+                $or: [
+                    { user: userId },
+                    { userId }
+                ]
+            })
+
+                .sort({
+                    createdAt: -1
+                })
+
+                .skip(skip)
+
+                .limit(limit);
+
+
+        const totalOrders =
+            await Order.countDocuments({
+
+                $or: [
+                    { user: userId },
+                    { userId }
+                ]
+            });
+
+
+        return res.json({
+
+            success: true,
+
+            page,
+
+            limit,
+
+            totalOrders,
+
+            totalPages:
+                Math.ceil(
+                    totalOrders / limit
+                ),
+
+            orders:
+                orders.map(
+                    formatOrder
+                )
+        });
+    })
+);
+
+
+// ======================================
+// GET SINGLE ORDER
+// ======================================
+router.get(
+
+    "/:id",
+
+    protect,
+
+    safeAsync(async (
+        req,
+        res
+    ) => {
+
+        const userId =
+            getUserId(req);
+
+        const orderId =
+            req.params.id;
+
+
+        if (
+            !isValidObjectId(
+                orderId
+            )
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid order ID"
+            });
+        }
+
+
+        const order =
+            await Order.findOne({
+
+                _id:
+                    orderId,
+
+                $or: [
+                    { user: userId },
+                    { userId }
+                ]
+            });
+
+
+        if (!order) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Order not found"
+            });
+        }
+
+
+        return res.json({
+
+            success: true,
+
+            order:
+                formatOrder(order)
+        });
+    })
+);
+
+
+// ======================================
+// ERROR HANDLER
+// ======================================
+router.use(
+
+    (err, req, res, next) => {
+
+        console.error(
+            "🚨 ORDER ERROR:",
+            err
+        );
+
+        return res.status(500).json({
+
             success: false,
-            message: "Cart not found"
+
+            message:
+                process.env.NODE_ENV ===
+                "production"
+                    ? "Order operation failed"
+                    : err.message
         });
     }
-
-    let total = calculateCartTotal(cart.items);
-
-    if (!isValidNumber(total) || total <= 0) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid total amount"
-        });
-    }
-
-    const order = new Order({
-        user: userId,
-        userId,
-        name: sanitizeString(name),
-        phone: sanitizeString(phone),
-        address: sanitizeString(address),
-        city: sanitizeString(city),
-        pincode: sanitizeString(pincode),
-        payment: "Razorpay",
-        razorpay_payment_id,
-        razorpay_order_id,
-        items: cart.items,
-        total,
-        totalAmount: total
-    });
-
-    await order.save();
-
-    // 🔥 SAFE CART CLEAR
-    cart.items = [];
-    await cart.save();
-
-    if (DEBUG) console.log("💳 ONLINE ORDER CREATED:", order._id);
-
-    res.json({
-        success: true,
-        message: "Payment successful & order placed",
-        orderId: order._id
-    });
-}));
+);
 
 
-// =======================
-// 🆕 GET USER ORDERS (NEW ADDITION)
-// =======================
-router.get("/", protect, safeAsync(async (req, res) => {
-    const userId = getUserId(req);
-
-    const orders = await Order.find({
-        $or: [{ user: userId }, { userId }]
-    }).sort({ createdAt: -1 });
-
-    res.json({
-        success: true,
-        orders
-    });
-}));
-
-
-// =======================
-// 🔥 GLOBAL ERROR HANDLER (NEW)
-// =======================
-router.use((err, req, res, next) => {
-    console.error("🚨 ORDER ROUTE UNHANDLED ERROR:", err);
-
-    res.status(500).json({
-        success: false,
-        message: "Unhandled order error",
-        error: err.message
-    });
-});
-
-
+// ======================================
+// EXPORT
+// ======================================
 module.exports = router;

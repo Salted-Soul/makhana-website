@@ -266,30 +266,83 @@ Place Order
 
 </section>
 
+
+<script src="./js/config.js"></script>
+
 <script src="checkout.js"></script>
 
 <script>
-// 🔥 UI INTERACTION ONLY (SAFE ADDITION)
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
 
-const tabs = document.querySelectorAll(".pay-option");
-const qrBox = document.getElementById("qrBox");
+    "DOMContentLoaded",
 
-tabs.forEach(tab=>{
-tab.addEventListener("click", ()=>{
-tabs.forEach(t=>t.classList.remove("active"));
-tab.classList.add("active");
+    () => {
 
-if(tab.id === "pay-qr"){
-qrBox.classList.add("active");
-}else{
-qrBox.classList.remove("active");
-}
+        const tabs =
+            document.querySelectorAll(
+                ".pay-option"
+            );
 
-});
-});
+        const qrBox =
+            document.getElementById(
+                "qrBox"
+            );
 
-});
+
+        if (!tabs.length) {
+
+            console.warn(
+                "⚠ No payment tabs found"
+            );
+
+            return;
+        }
+
+
+        tabs.forEach((tab) => {
+
+            if (!tab) return;
+
+            tab.addEventListener(
+
+                "click",
+
+                () => {
+
+                    tabs.forEach((t) => {
+
+                        t.classList.remove(
+                            "active"
+                        );
+                    });
+
+                    tab.classList.add(
+                        "active"
+                    );
+
+
+                    if (qrBox) {
+
+                        if (
+                            tab.id === "pay-qr"
+                        ) {
+
+                            qrBox.classList.add(
+                                "active"
+                            );
+
+                        } else {
+
+                            qrBox.classList.remove(
+                                "active"
+                            );
+                        }
+                    }
+                }
+            );
+        });
+    }
+);
 </script>
 
 </body>

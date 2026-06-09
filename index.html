@@ -24,7 +24,7 @@
     <header class="header">
 
         <div class="logo-container">
-            <img src="images/logo.jpeg" class="logo">
+            <img src="images/logo.jpeg" class="logo" alt="Salted Soul Logo">
             <span class="logo-text">Salted Soul</span>
         </div>
 
@@ -58,23 +58,34 @@
                 </div>
             </div>
 
-            <a href="wishlist.html"><i class="fa-regular fa-heart"></i></a>
-            <a href="cart.html"><i class="fa fa-shopping-cart"></i></a>
+<a href="wishlist.html" class="wishlist-link">
 
-          <!-- ✅ UPDATED PROFILE (FINAL) -->
-<div class="profile-box" id="profileBox">
+    <i class="fa-regular fa-heart"></i>
 
-    <div class="profile-btn" id="profileBtn">
-        <i class="fa fa-user"></i>
-        <span id="usernameText">Account</span>
-    </div>
+    <span id="wishlistCount" class="wishlist-count">
+        0
+    </span>
 
-    <div class="profile-dropdown" id="profileDropdown">
-        <a href="orders.html">My Orders</a>
-        <a href="#" onclick="logout()">Logout</a>
-    </div>
+</a>
+<a href="cart.html" class="cart-icon">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span id="cartCount">0</span>
+</a>
 
-</div>
+            <!-- ✅ UPDATED PROFILE (FINAL) -->
+            <div class="profile-box" id="profileBox">
+
+                <div class="profile-btn" id="profileBtn">
+                    <i class="fa fa-user"></i>
+                    <span id="usernameText">Account</span>
+                </div>
+
+                <div class="profile-dropdown" id="profileDropdown">
+                    <a href="orders.html">My Orders</a>
+                    <a href="#" onclick="logout()">Logout</a>
+                </div>
+
+            </div>
 
         </nav>
 
@@ -173,133 +184,173 @@
 
     <section class="products" id="products">
 
-        <h2>Our Products</h2>
+    <h2>Our Products</h2>
 
-        <div class="product-container">
+    <div class="product-container">
 
-            <!-- PRODUCT 1 -->
-            <div class="card">
+        <!-- PRODUCT 1 -->
+        <div class="card">
 
-                <button class="wishlist-btn" onclick="handleWishlist(this, {
-                id: 'p1',
-                name: 'Classic Roasted',
-                price: 199,
-                image: 'images/sticker1.jpeg'
-            })">♡</button>
+            <button class="wishlist-btn"
+                onclick="addToWishlist(this,'6a13118be0d0ca92bdd4454f')">
+                <i class="fa-regular fa-heart"></i>
+            </button>
 
-                <img src="images/sticker1.jpeg">
+            <img src="images/plain.jpeg" alt="Plain Makhana">
 
-                <h3>Classic Roasted</h3>
-                <p class="price">₹199</p>
+            <h3>Plain Makhana</h3>
+            <p class="price">₹199</p>
 
-                <div class="card-buttons">
-                    <button class="view-btn">View</button>
-                    <button onclick="addToCart(this,'Classic Roasted',199,'images/sticker1.jpeg')">
-                        Add to Cart
-                    </button>
-                </div>
+            <div class="card-buttons">
 
-                <div class="qty-box">
-                    <button onclick="decreaseQty(this)">-</button>
-                    <span>0</span>
-                    <button onclick="increaseQty(this)">+</button>
-                </div>
+                <button class="view-btn">
+                    View
+                </button>
 
-            </div>
-
-            <!-- PRODUCT 2 -->
-            <div class="card">
-
-                <button class="wishlist-btn" onclick="handleWishlist(this, {
-                id: 'p2',
-                name: 'Black Pepper',
-                price: 219,
-                image: 'images/black.png'
-            })">♡</button>
-
-                <img src="images/black.png">
-
-                <h3>Black Pepper</h3>
-                <p class="price">₹219</p>
-
-                <div class="card-buttons">
-                    <button class="view-btn">View</button>
-                    <button onclick="addToCart(this,'Black Pepper',219,'images/black.png')">
-                        Add to Cart
-                    </button>
-                </div>
-
-                <div class="qty-box">
-                    <button onclick="decreaseQty(this)">-</button>
-                    <span>0</span>
-                    <button onclick="increaseQty(this)">+</button>
-                </div>
+                <button onclick="addToCart(
+                    this,
+                    '6a13118be0d0ca92bdd4454f',
+                    'Plain Makhana',
+                    199,
+                    'images/plain.jpeg'
+                )">
+                    Add to Cart
+                </button>
 
             </div>
 
-            <!-- PRODUCT 3 -->
-            <div class="card">
-
-                <button class="wishlist-btn" onclick="handleWishlist(this, {
-                id: 'p3',
-                name: 'Peri Peri',
-                price: 229,
-                image: 'images/peri.png'
-            })">♡</button>
-
-                <img src="images/peri.png">
-
-                <h3>Peri Peri</h3>
-                <p class="price">₹229</p>
-
-                <div class="card-buttons">
-                    <button class="view-btn">View</button>
-                    <button onclick="addToCart(this,'Peri Peri',229,'images/peri.png')">
-                        Add to Cart
-                    </button>
-                </div>
-
-                <div class="qty-box">
-                    <button onclick="decreaseQty(this)">-</button>
-                    <span>0</span>
-                    <button onclick="increaseQty(this)">+</button>
-                </div>
-
-            </div>
-
-            <!-- PRODUCT 4 -->
-            <div class="card">
-
-                <button class="wishlist-btn" onclick="handleWishlist(this, {
-                id: 'p4',
-                name: 'Himalayan Salt',
-                price: 249,
-                image: 'images/salt.png'
-            })">♡</button>
-
-                <img src="images/salt.png">
-
-                <h3>Himalayan Salt</h3>
-                <p class="price">₹249</p>
-
-                <div class="card-buttons">
-                    <button class="view-btn">View</button>
-                    <button onclick="addToCart(this,'Himalayan Salt',249,'images/salt.png')">
-                        Add to Cart
-                    </button>
-                </div>
-
-                <div class="qty-box">
-                    <button onclick="decreaseQty(this)">-</button>
-                    <span>0</span>
-                    <button onclick="increaseQty(this)">+</button>
-                </div>
-
+            <div class="qty-box">
+                <button onclick="decreaseQty(this)">-</button>
+                <span>0</span>
+                <button onclick="increaseQty(this)">+</button>
             </div>
 
         </div>
-    </section>
 
+
+        <!-- PRODUCT 2 -->
+        <div class="card">
+
+            <button class="wishlist-btn"
+                onclick="addToWishlist(this,'6a1311a2e0d0ca92bdd44551')">
+                <i class="fa-regular fa-heart"></i>
+            </button>
+
+            <img src="images/pudina.jpeg" alt="Pudina">
+
+            <h3>Pudina</h3>
+            <p class="price">₹219</p>
+
+            <div class="card-buttons">
+
+                <button class="view-btn">
+                    View
+                </button>
+
+                <button onclick="addToCart(
+                    this,
+                    '6a1311a2e0d0ca92bdd44551',
+                    'Pudina',
+                    219,
+                    'images/pudina.jpeg'
+                )">
+                    Add to Cart
+                </button>
+
+            </div>
+
+            <div class="qty-box">
+                <button onclick="decreaseQty(this)">-</button>
+                <span>0</span>
+                <button onclick="increaseQty(this)">+</button>
+            </div>
+
+        </div>
+
+
+        <!-- PRODUCT 3 -->
+        <div class="card">
+
+            <button class="wishlist-btn"
+                onclick="addToWishlist(this,'6a1311b6e0d0ca92bdd44553')">
+                <i class="fa-regular fa-heart"></i>
+            </button>
+
+            <img src="images/peri.jpeg" alt="Peri Peri">
+
+            <h3>Peri Peri</h3>
+            <p class="price">₹229</p>
+
+            <div class="card-buttons">
+
+                <button class="view-btn">
+                    View
+                </button>
+
+                <button onclick="addToCart(
+                    this,
+                    '6a1311b6e0d0ca92bdd44553',
+                    'Peri Peri',
+                    229,
+                    'images/peri.jpeg'
+                )">
+                    Add to Cart
+                </button>
+
+            </div>
+
+            <div class="qty-box">
+                <button onclick="decreaseQty(this)">-</button>
+                <span>0</span>
+                <button onclick="increaseQty(this)">+</button>
+            </div>
+
+        </div>
+
+
+        <!-- PRODUCT 4 -->
+        <div class="card">
+
+            <button class="wishlist-btn"
+                onclick="addToWishlist(this,'6a1311c4e0d0ca92bdd44555')">
+                <i class="fa-regular fa-heart"></i>
+            </button>
+
+            <img src="images/himalayan-pepper.jpeg"
+                alt="Himalayan Salt & Pepper">
+
+            <h3>Himalayan Salt & Pepper</h3>
+            <p class="price">₹249</p>
+
+            <div class="card-buttons">
+
+                <button class="view-btn">
+                    View
+                </button>
+
+                <button onclick="addToCart(
+                    this,
+                    '6a1311c4e0d0ca92bdd44555',
+                    'Himalayan Salt & Pepper',
+                    249,
+                    'images/himalayan-pepper.jpeg'
+                )">
+                    Add to Cart
+                </button>
+
+            </div>
+
+            <div class="qty-box">
+                <button onclick="decreaseQty(this)">-</button>
+                <span>0</span>
+                <button onclick="increaseQty(this)">+</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
     <!-- WHY CHOOSE -->
 
     <section class="why-us">
@@ -409,113 +460,217 @@
     </footer>
     <div id="toast" class="toast"></div>
 
-<!-- ======================= -->
+    <!-- ======================= -->
 
-<script src="js/script.js"></script>
+    <script src="./js/config.js"></script>
 
-<script>
+    <script src="js/script.js"></script>
 
-document.addEventListener("DOMContentLoaded", async () => {
+    <script>
 
-    const API_BASE = "http://https://makhana-website.onrender.com/api/auth";
+        document.addEventListener("DOMContentLoaded", async () => {
 
-    const usernameText = document.getElementById("usernameText");
-    const profileBox = document.getElementById("profileBox");
-    const dropdown = document.getElementById("profileDropdown");
+            // ======================================
+            // API BASE
+            // ======================================
+            const API_BASE = window.location.origin + "/api";
 
-    let timeout;
+            // ======================================
+            // ELEMENTS
+            // ======================================
+            const usernameText =
+                document.getElementById("usernameText");
 
-    // =======================
-    // ✅ CENTRAL AUTH CHECK (UPGRADED 🔥)
-    // =======================
-    async function checkAuth() {
-        try {
-            const res = await fetch(`${API_BASE}/check`, {
-                method: "GET",
-                credentials: "include"
-            });
+            const profileBox =
+                document.getElementById("profileBox");
 
-            if (!res.ok) return null;
+            const dropdown =
+                document.getElementById("profileDropdown");
 
-            const data = await res.json();
+            let timeout;
 
-            console.log("✅ Auth user:", data.user);
+            // ======================================
+            // AUTH CHECK
+            // ======================================
+            async function checkAuth() {
 
-            // ❌ Disable localStorage as source (kept but not used)
-            // localStorage.setItem("user", JSON.stringify(data.user));
+                try {
 
-            return data.user;
+                    const res = await fetch(
 
-        } catch (err) {
-            console.error("Auth check failed:", err);
-            return null;
+                        `${API_BASE}/auth/check`,
+
+                        {
+                            method: "GET",
+
+                            credentials: "include",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            }
+                        }
+                    );
+
+                    if (!res.ok) {
+
+                        console.warn(
+                            `❌ Auth failed: ${res.status}`
+                        );
+
+                        return null;
+                    }
+
+                    const data = await res.json();
+
+                    console.log(
+                        "✅ Auth user:",
+                        data.user
+                    );
+
+                    return data.user;
+
+                } catch (err) {
+
+                    console.error(
+                        "❌ Auth check failed:",
+                        err
+                    );
+
+                    return null;
+                }
+            }
+
+            // ======================================
+            // GET USER
+            // ======================================
+            const user = await checkAuth();
+
+            // ======================================
+            // USER DISPLAY
+            // ======================================
+            if (user) {
+
+                if (usernameText) {
+
+                    usernameText.innerText =
+                        user.name || "Account";
+                }
+
+            } else {
+
+                if (usernameText) {
+
+                    usernameText.innerText =
+                        "Login";
+                }
+
+                if (profileBox) {
+
+                    profileBox.onclick = () => {
+
+                        window.location.href =
+                            "login.html";
+                    };
+                }
+            }
+
+            // ======================================
+            // DROPDOWN HANDLING
+            // ======================================
+            if (profileBox && dropdown) {
+
+                profileBox.addEventListener(
+
+                    "mouseenter",
+
+                    () => {
+
+                        clearTimeout(timeout);
+
+                        dropdown.style.display =
+                            "block";
+                    }
+                );
+
+                profileBox.addEventListener(
+
+                    "mouseleave",
+
+                    () => {
+
+                        timeout = setTimeout(() => {
+
+                            dropdown.style.display =
+                                "none";
+
+                        }, 200);
+                    }
+                );
+
+                profileBox.addEventListener(
+
+                    "click",
+
+                    (e) => {
+
+                        e.stopPropagation();
+
+                        dropdown.style.display =
+                            "block";
+                    }
+                );
+
+                document.addEventListener(
+
+                    "click",
+
+                    () => {
+
+                        dropdown.style.display =
+                            "none";
+                    }
+                );
+            }
+
+        });
+
+
+        // ======================================
+        // LOGOUT
+        // ======================================
+        async function logout() {
+
+            try {
+
+                await fetch(
+    `${window.location.origin}/api/auth/logout`,
+
+                    {
+                        method: "POST",
+
+                        credentials: "include",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        }
+                    }
+                );
+
+                window.location.href =
+                    "login.html";
+
+            } catch (err) {
+
+                console.error(
+                    "❌ Logout failed:",
+                    err
+                );
+            }
         }
-    }
 
-    const user = await checkAuth();
-
-    // =======================
-    // ✅ USER DISPLAY
-    // =======================
-    if (user) {
-        if (usernameText) usernameText.innerText = user.name;
-    } else {
-        if (usernameText) usernameText.innerText = "Login";
-
-        if (profileBox) {
-            profileBox.onclick = () => window.location.href = "login.html";
-        }
-    }
-
-    // =======================
-    // ✅ DROPDOWN SAFE HANDLING
-    // =======================
-    if (profileBox && dropdown) {
-
-        profileBox.addEventListener("mouseenter", () => {
-            clearTimeout(timeout);
-            dropdown.style.display = "block";
-        });
-
-        profileBox.addEventListener("mouseleave", () => {
-            timeout = setTimeout(() => {
-                dropdown.style.display = "none";
-            }, 200);
-        });
-
-        profileBox.addEventListener("click", (e) => {
-            e.stopPropagation();
-            dropdown.style.display = "block";
-        });
-
-        document.addEventListener("click", () => {
-            dropdown.style.display = "none";
-        });
-    }
-
-});
-
-
-// =======================
-// ✅ LOGOUT (UPGRADED 🔥)
-// =======================
-async function logout() {
-    try {
-        await fetch("http://https://makhana-website.onrender.com/api/auth/logout", {
-            method: "POST",
-            credentials: "include"
-        });
-
-        // ❌ remove dependency
-        // localStorage.removeItem("user");
-
-        window.location.href = "login.html";
-
-    } catch (err) {
-        console.error("Logout failed:", err);
-    }
-}
-</script>
+    </script>
 
 </body>
 

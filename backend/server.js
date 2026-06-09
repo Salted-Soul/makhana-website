@@ -1,259 +1,871 @@
 const path = require("path");
+
 require("dotenv").config();
 
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-
+const compression = require("compression");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const mongoSanitize = require("express-mongo-sanitize");
+const hpp = require("hpp");
+const session = require("express-session");
+const passport = require("./config/passport");
 
+
+// ======================================
+// DATABASE
+// ======================================
+const connectDB = require("./config/db");
+
+
+// ======================================
+// ROUTES
+// ======================================
 const authRoutes = require("./routes/authRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-
+const productRoutes = require("./routes/productRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
+// ======================================
+// EXPRESS APP
+// ======================================
 const app = express();
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "../")));
-app.use(express.urlencoded({ extended: true }));
 
 
-// ===============================
-// 🧠 ENV VALIDATION
-// ===============================
-["MONGO_URI", "JWT_SECRET"].forEach((key) => {
+// ======================================
+// ENVIRONMENT
+// ======================================
+const PORT = process.env.PORT || 5000;
+
+const NODE_ENV =
+    process.env.NODE_ENV || "development";
+
+const DEBUG =
+    process.env.DEBUG === "true";
+
+
+// ======================================
+// REQUIRED ENV VALIDATION
+// ======================================
+[
+    "MONGO_URI",
+    "JWT_SECRET"
+].forEach((key) => {
+
     if (!process.env[key]) {
-        console.error(`❌ Missing ENV: ${key}`);
+
+        console.error(
+            `❌ Missing required ENV variable: ${key}`
+        );
+
         process.exit(1);
     }
 });
 
 
-// ===============================
-// 🔥 DEBUG MODE
-// ===============================
-const DEBUG = process.env.DEBUG === "true";
-
-
-// ===============================
-// 🔒 SECURITY
-// ===============================
-app.use(helmet());
-
-app.use((req, res, next) => {
-    res.setHeader("X-Powered-By", "SecureServer");
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("X-Frame-Options", "DENY");
-    next();
-});
-
-
-// ===============================
-// 🔥 BODY PARSER (CRITICAL FIX)
-// ===============================
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true }));
-
-
-// ===============================
-// 🔥 COOKIE
-// ===============================
-app.use(cookieParser());
-
-
-// ===============================
-// 🔥 SANITIZE
-// ===============================
-try {
-    app.use((req, res, next) => {
-        try {
-            mongoSanitize()(req, res, next);
-        } catch (err) {
-            next();
-        }
-    });
-} catch (err) {}
-
-app.use((req, res, next) => {
-    try {
-        const sanitize = (obj) => {
-            if (!obj || typeof obj !== "object") return obj;
-            for (let key in obj) {
-                if (typeof obj[key] === "string") {
-                    obj[key] = obj[key].replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                } else if (typeof obj[key] === "object") {
-                    sanitize(obj[key]);
-                }
-            }
-        };
-        sanitize(req.body);
-        sanitize(req.query);
-        sanitize(req.params);
-    } catch {}
-    next();
-});
-
-
-// ===============================
-// 🔥 TRUST PROXY
-// ===============================
+// ======================================
+// TRUST PROXY
+// ======================================
 app.set("trust proxy", 1);
 
 
-// ===============================
-// ✅ CORS
-// ===============================
-app.use(cors({
-    origin: "*",
-    credentials: true
-}));
+// ======================================
+// SECURITY HEADERS
+// ======================================
+app.use(
 
+    helmet({
+
+        crossOriginResourcePolicy: {
+            policy: "cross-origin"
+        },
+
+        contentSecurityPolicy: {
+
+            useDefaults: true,
+
+            directives: {
+
+                defaultSrc: [
+                    "'self'"
+                ],
+
+                scriptSrc: [
+
+    "'self'",
+
+    "'unsafe-inline'",
+
+    "'unsafe-eval'",
+
+    "https://checkout.razorpay.com",
+
+    "https://cdn.razorpay.com"
+],
+
+scriptSrcAttr: [
+
+    "'unsafe-inline'"
+],
+
+                styleSrc: [
+                    "'self'",
+                    "'unsafe-inline'",
+                    "https:"
+                ],
+
+                imgSrc: [
+                    "'self'",
+                    "data:",
+                    "blob:",
+                    "https:"
+                ],
+
+                connectSrc: [
+
+    "'self'",
+
+    "https://api.razorpay.com",
+
+    "https://checkout.razorpay.com",
+
+    "https://cdn.razorpay.com",
+
+    "https://consoling-backspace-elongated.ngrok-free.dev",
+
+    "http://127.0.0.1:5000",
+
+    "http://localhost:5000",
+
+    process.env.CLIENT_URL,
+
+    process.env.FRONTEND_URL,
+
+    process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : null
+
+].filter(Boolean),
+
+                frameSrc: [
+                    "'self'",
+                    "https://api.razorpay.com",
+                    "https://checkout.razorpay.com"
+                ],
+
+                fontSrc: [
+
+    "'self'",
+
+    "https:",
+
+    "data:"
+],
+
+                objectSrc: [
+                    "'none'"
+                ],
+
+                upgradeInsecureRequests:
+                    NODE_ENV === "production"
+                        ? []
+                        : null
+            }
+        }
+    })
+);
+
+
+// ======================================
+// CUSTOM SECURITY HEADERS
+// ======================================
 app.use((req, res, next) => {
-   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
 
-    if (req.method === "OPTIONS") return res.sendStatus(200);
+    res.removeHeader("X-Powered-By");
+
+    res.setHeader(
+        "X-Content-Type-Options",
+        "nosniff"
+    );
+
+    res.setHeader(
+    "X-Frame-Options",
+    "SAMEORIGIN"
+);
+
+    res.setHeader(
+        "Referrer-Policy",
+        "strict-origin-when-cross-origin"
+    );
 
     next();
 });
 
 
-// ===============================
-// 🧠 REQUEST ID
-// ===============================
+// ======================================
+// CORS CONFIGURATION
+// ======================================
+const allowedOrigins = [
+
+    "http://127.0.0.1:5500",
+
+    "http://localhost:5500",
+
+    "http://127.0.0.1:5000",
+
+    "http://localhost:5000",
+
+    "https://consoling-backspace-elongated.ngrok-free.dev",
+
+    process.env.CLIENT_URL,
+
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
+const corsOptions = {
+
+    origin: (origin, callback) => {
+
+        // ALLOW POSTMAN / MOBILE APPS
+        if (!origin) {
+
+            return callback(null, true);
+        }
+
+        if (allowedOrigins.includes(origin)) {
+
+            return callback(null, true);
+        }
+
+        console.warn(
+            `❌ BLOCKED CORS: ${origin}`
+        );
+
+        console.error(
+    `Blocked Origin: ${origin}`
+);
+
+return callback(null, false);
+    },
+
+    credentials: true,
+
+    methods: [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS"
+    ],
+
+    allowedHeaders: [
+
+    "Content-Type",
+
+    "Authorization",
+
+    "X-Requested-With"
+]
+};
+
+app.use(cors(corsOptions));
+
+app.options("/", cors(corsOptions));
+
+
+// ======================================
+// RAZORPAY WEBHOOK RAW BODY SUPPORT
+// ======================================
+app.use(
+
+    "/api/payment/webhook",
+
+    express.raw({
+        type: "application/json"
+    })
+);
+
+
+// ======================================
+// BODY PARSERS
+// ======================================
+app.use(
+
+    express.json({
+
+        limit: "10kb"
+    })
+);
+
+app.use(
+
+    express.urlencoded({
+
+        extended: true,
+
+        limit: "10kb"
+    })
+);
+
+
+// ======================================
+// COOKIE PARSER
+// ======================================
+app.use(cookieParser());
+
+
+
+
+app.use(
+    session({
+        secret:
+            process.env.JWT_SECRET,
+        resave: false,
+        saveUninitialized: false
+    })
+);
+
+app.use(
+    passport.initialize()
+);
+
+app.use(
+    passport.session()
+);
+
+
+// ======================================
+// COMPRESSION
+// ======================================
+app.use(compression());
+
+
+// ======================================
+// SANITIZATION
+// ======================================
 app.use((req, res, next) => {
-    req.requestId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-    res.setHeader("X-Request-Id", req.requestId);
+
+    try {
+
+        // SANITIZE BODY
+        if (req.body) {
+
+            mongoSanitize.sanitize(
+
+                req.body,
+
+                {
+                    replaceWith: "_"
+                }
+            );
+        }
+
+
+        // SANITIZE PARAMS
+        if (req.params) {
+
+            mongoSanitize.sanitize(
+
+                req.params,
+
+                {
+                    replaceWith: "_"
+                }
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ Mongo sanitize error:",
+            error.message
+        );
+    }
+
+    next();
+});
+
+app.use(hpp());
+
+
+// ======================================
+// BASIC XSS SANITIZATION
+// ======================================
+app.use((req, res, next) => {
+
+    try {
+
+        const sanitize = (obj) => {
+
+            if (
+                !obj ||
+                typeof obj !== "object"
+            ) {
+
+                return;
+            }
+
+            Object.keys(obj).forEach((key) => {
+
+                const value = obj[key];
+
+                if (
+                    typeof value === "string"
+                ) {
+
+                    obj[key] = value
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .trim();
+                }
+
+                else if (
+                    typeof value === "object"
+                ) {
+
+                    sanitize(value);
+                }
+            });
+        };
+
+        sanitize(req.body);
+
+// EXPRESS 5 SAFE QUERY SANITIZATION
+if (req.query && typeof req.query === "object") {
+
+    const safeQuery = {};
+
+    Object.keys(req.query).forEach((key) => {
+
+        const value = req.query[key];
+
+        if (typeof value === "string") {
+
+            safeQuery[key] = value
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .trim();
+
+        } else {
+
+            safeQuery[key] = value;
+        }
+    });
+
+    req.safeQuery = safeQuery;
+}
+
+sanitize(req.params);
+
+    } catch (error) {
+
+        console.error(
+            "❌ Sanitization error:",
+            error.message
+        );
+    }
+
     next();
 });
 
 
-// ===============================
-// 📊 LOGGER
-// ===============================
+// ======================================
+// REQUEST ID MIDDLEWARE
+// ======================================
 app.use((req, res, next) => {
+
+    req.requestId =
+
+        `${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2, 10)}`;
+
+    res.setHeader(
+        "X-Request-Id",
+        req.requestId
+    );
+
+    next();
+});
+
+
+// ======================================
+// LOGGER
+// ======================================
+app.use((req, res, next) => {
+
     const start = Date.now();
 
     if (DEBUG) {
-        console.log("📥 BODY:", req.body);
+
+        console.log(
+            "📥 REQUEST BODY:",
+            req.body
+        );
     }
 
     res.on("finish", () => {
+
         console.log(
-            `[${req.requestId}] ${req.method} ${req.originalUrl} ${res.statusCode} - ${Date.now() - start}ms`
+
+            `[${req.requestId}] ` +
+
+            `${req.method} ` +
+
+            `${req.originalUrl} ` +
+
+            `${res.statusCode} ` +
+
+            `- ${Date.now() - start}ms`
         );
     });
 
     next();
 });
 
+// ======================================
+// API DEBUG LOGGER
+// ======================================
 
-// ===============================
-// 🚀 RATE LIMIT
-// ===============================
-app.use("/api", rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 200
-}));
+app.use("/api", (req, res, next) => {
 
+    console.log(
+        `🌐 API HIT: ${req.method} ${req.originalUrl}`
+    );
 
-// ===============================
-// 🔧 SAFE ROUTE WRAPPER
-// ===============================
-const safeRoute = (router) => {
-    return (req, res, next) => {
-        try {
-            router(req, res, next);
-        } catch (err) {
-            next(err);
-        }
-    };
-};
-
-
-// ===============================
-// ROUTES
-// ===============================
-app.use("/api/auth", safeRoute(authRoutes));
-app.use("/api/cart", safeRoute(cartRoutes));
-app.use("/api/order", safeRoute(orderRoutes));
-app.use("/api/payment", safeRoute(paymentRoutes));
-app.use("/api/admin", safeRoute(adminRoutes));
-
-
-// ===============================
-app.get("/health", (req, res) => {
-    res.json({ success: true });
+    next();
 });
 
-app.get("/", (req, res) => {
-    res.send("Backend running 🚀");
-});
+// ======================================
+// API RATE LIMITER
+// ======================================
+const apiLimiter = rateLimit({
 
+    windowMs:
+        15 * 60 * 1000,
 
-// ===============================
-// ❌ 404
-// ===============================
-app.use((req, res) => {
-    res.status(404).json({ success: false, message: "Route not found" });
-});
+    max:
+        NODE_ENV === "production"
+            ? 200
+            : 1000,
 
+    standardHeaders: true,
 
-// ===============================
-// ❌ GLOBAL ERROR
-// ===============================
-app.use((err, req, res, next) => {
-    console.error("GLOBAL ERROR:", err.message);
-    res.status(500).json({
+    legacyHeaders: false,
+
+    message: {
+
         success: false,
-        message: err.message || "Server error"
+
+        message:
+            "Too many requests. Please try again later."
+    }
+});
+
+app.use("/api", apiLimiter);
+
+
+// ======================================
+// STATIC FILES
+// ======================================
+app.use(
+
+    express.static(
+
+        path.join(__dirname, ".."),
+
+        {
+
+            maxAge:
+                NODE_ENV === "production"
+                    ? "7d"
+                    : 0,
+
+            etag: true,
+
+            lastModified: true
+        }
+    )
+);
+
+
+// ======================================
+// API ROUTES
+// ======================================
+// ======================================
+// API ROUTES
+// ======================================
+
+app.use("/api/auth", authRoutes);
+
+
+// CART ROUTES
+app.use("/api/cart", cartRoutes);
+
+// BACKWARD COMPATIBILITY
+app.use("/cart", cartRoutes);
+
+
+// ORDER ROUTES
+app.use("/api/order", orderRoutes);
+
+app.use("/api/orders", orderRoutes);
+
+// BACKWARD COMPATIBILITY
+app.use("/order", orderRoutes);
+
+
+// PAYMENT ROUTES
+app.use("/api/payment", paymentRoutes);
+
+// BACKWARD COMPATIBILITY
+app.use("/payment", paymentRoutes);
+
+
+// ADMIN ROUTES
+app.use("/api/admin", adminRoutes);
+
+
+// PRODUCT ROUTES
+app.use("/api/products", productRoutes);
+// WISHLIST ROUTES
+app.use("/api/wishlist", wishlistRoutes);
+
+
+// ======================================
+// HEALTH CHECK
+// ======================================
+app.get("/api/test", (req, res) => {
+
+    res.json({
+
+        success: true,
+
+        message: "API working perfectly"
     });
 });
 
 
-// ===============================
-// 🧠 DB CONNECT
-// ===============================
-let server;
+// ======================================
+// API HEALTH
+// ======================================
+app.get("/api/health", (req, res) => {
 
-const connectDB = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI);
+    res.status(200).json({
 
-        console.log("MongoDB Connected");
+        success: true,
 
-        server = app.listen(process.env.PORT || 5000, "0.0.0.0", () => {
-    console.log(`Server running on PORT ${process.env.PORT || 5000}`);
+        status: "healthy",
+
+        environment: NODE_ENV,
+
+        uptime: process.uptime(),
+
+        timestamp: new Date(),
+
+        memoryUsage: process.memoryUsage(),
+
+        pid: process.pid
+    });
 });
 
-    } catch (err) {
-        console.error("Mongo Error:", err.message);
-        setTimeout(connectDB, 5000);
+
+// ======================================
+// ROOT ROUTE
+// ======================================
+app.get("/", (req, res) => {
+
+    res.send(
+        "🚀 Ecommerce Backend Running Securely"
+    );
+});
+
+
+// ======================================
+// 404 HANDLER
+// ======================================
+app.use((req, res) => {
+
+    res.status(404).json({
+
+        success: false,
+
+        message: `Route not found: ${req.originalUrl}`
+    });
+});
+
+
+// ======================================
+// GLOBAL ERROR HANDLER
+// ======================================
+app.use((err, req, res, next) => {
+
+    console.error(
+
+        "❌ GLOBAL ERROR:",
+
+        {
+
+            message: err.message,
+
+            stack:
+                NODE_ENV === "development"
+                    ? err.stack
+                    : undefined,
+
+            url: req.originalUrl,
+
+            method: req.method,
+
+            ip: req.ip,
+
+            requestId: req.requestId
+        }
+    );
+
+    const statusCode =
+        err.statusCode || 500;
+
+    res.status(statusCode).json({
+
+        success: false,
+
+        message:
+            NODE_ENV === "production"
+                ? "Something went wrong"
+                : err.message
+    });
+});
+
+
+// ======================================
+// SERVER INSTANCE
+// ======================================
+let server;
+
+
+// ======================================
+// START SERVER
+// ======================================
+const startServer = async () => {
+
+    try {
+
+        await connectDB();
+
+        server = app.listen(
+
+            PORT,
+
+            "0.0.0.0",
+
+            () => {
+
+                console.log(
+
+                    `🚀 Server running on PORT ${PORT}`
+                );
+
+                console.log(
+                    `🌍 Environment: ${NODE_ENV}`
+                );
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+
+            "❌ SERVER START FAILED:",
+
+            error.message
+        );
+
+        process.exit(1);
     }
 };
 
-connectDB();
+
+// ======================================
+// START APPLICATION
+// ======================================
+startServer();
 
 
-// ===============================
-// 🛑 SHUTDOWN
-// ===============================
-process.on("SIGINT", async () => {
-    if (server) server.close();
-    await mongoose.connection.close();
-    process.exit(0);
-});
+// ======================================
+// GRACEFUL SHUTDOWN
+// ======================================
+const gracefulShutdown = async (signal) => {
 
-process.on("unhandledRejection", (err) => {
-    console.error("UNHANDLED REJECTION:", err);
-});
+    console.log(
+        `🛑 ${signal} received. Shutting down gracefully...`
+    );
 
-process.on("uncaughtException", (err) => {
-    console.error("UNCAUGHT EXCEPTION:", err);
-});
+    if (server) {
+
+        server.close(() => {
+
+            console.log(
+                "✅ HTTP server closed"
+            );
+
+            process.exit(0);
+        });
+    } else {
+
+        process.exit(0);
+    }
+};
+
+process.on(
+    "SIGINT",
+    () => gracefulShutdown("SIGINT")
+);
+
+process.on(
+    "SIGTERM",
+    () => gracefulShutdown("SIGTERM")
+);
+
+
+// ======================================
+// UNHANDLED REJECTION
+// ======================================
+process.on(
+
+    "unhandledRejection",
+
+    (reason) => {
+
+        console.error(
+
+            "❌ UNHANDLED REJECTION:",
+
+            reason
+        );
+    }
+);
+
+
+// ======================================
+// UNCAUGHT EXCEPTION
+// ======================================
+process.on(
+
+    "uncaughtException",
+
+    (error) => {
+
+        console.error(
+
+            "❌ UNCAUGHT EXCEPTION:",
+
+            error
+        );
+    }
+);

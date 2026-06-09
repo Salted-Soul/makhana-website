@@ -1,62 +1,223 @@
 const express = require("express");
+
+const mongoose = require("mongoose");
+
 const Cart = require("../models/Cart");
 
-const { protect } = require("../middleware/authMiddleware");
+const {
+    protect
+} = require("../middleware/authMiddleware");
+
 
 const router = express.Router();
 
 
-// ===============================
-// 🔥 GLOBAL DEBUG FLAG (NEW)
-// ===============================
-const DEBUG = process.env.DEBUG === "true";
+// ======================================
+// DEBUG FLAG
+// ======================================
+const DEBUG =
+    process.env.DEBUG === "true";
 
 
-// ===============================
-// 🔥 SAFE SAVE WRAPPER (CRITICAL ADD)
-// ===============================
-const safeSave = async (cart) => {
-    try {
-        return await cart.save();
-    } catch (err) {
-        console.error("❌ SAFE SAVE FAILED:", err.message);
-        return cart; // fallback to avoid crash
-    }
+// ======================================
+// CONSTANTS
+// ======================================
+const MAX_CART_QTY = 20;
+
+
+// ======================================
+// HELPERS
+// ======================================
+const getUserId = (
+    req
+) => {
+
+    return (
+
+        req.user?._id ||
+
+        req.userId ||
+
+        req.body.userId ||
+
+        req.params.userId
+    );
 };
 
 
-// ===============================
-// 🔥 GET USER ID (ENHANCED SAFE)
-// ===============================
-const getUserId = (req) => {
-    if (req.userId) return req.userId;
-    if (req.user && req.user._id) return req.user._id;
+const isValidObjectId = (
+    id
+) => {
 
-    return req.body.userId || req.params.userId;
+    return mongoose.Types.ObjectId.isValid(id);
 };
 
 
-// ===============================
-const isValidPrice = (price) =>
-    typeof price === "number" && price >= 0;
+const sanitizeString = (
+    str
+) => {
+
+    return String(str || "")
+        .replace(/[<>]/g, "")
+        .trim();
+};
 
 
-// ===============================
-const findCart = async (userId) => {
+const sanitizeItem = (
+    data
+) => ({
+
+    productId:
+        sanitizeString(
+            data.productId ||
+            data.name
+        ),
+
+    name:
+        sanitizeString(data.name),
+
+    image:
+        sanitizeString(data.image),
+
+    price:
+        Number(data.price || 0),
+
+    quantity:
+        Math.min(
+
+            MAX_CART_QTY,
+
+            Math.max(
+                1,
+                Number(data.quantity || 1)
+            )
+        )
+});
+
+
+const calculateTotal = (
+    items = []
+) => {
+
+    return items.reduce(
+
+        (acc, item) => {
+
+            const qty =
+                Number(item.quantity) || 0;
+
+            const price =
+                Number(item.price) || 0;
+
+            return acc + (
+                qty * price
+            );
+
+        },
+
+        0
+    );
+};
+
+
+// ======================================
+// SAFE ASYNC WRAPPER
+// ======================================
+const safeAsync = (fn) => {
+
+    return async (
+        req,
+        res,
+        next
+    ) => {
+
+        try {
+
+            await fn(
+                req,
+                res,
+                next
+            );
+
+        } catch (err) {
+
+            console.error(
+                "❌ CART ROUTE ERROR:",
+                err
+            );
+
+            next(err);
+        }
+    };
+};
+
+
+// ======================================
+// FIND CART
+// ======================================
+const findCart = async (
+    userId
+) => {
+
     return await Cart.findOne({
-        $or: [{ user: userId }, { userId }]
+
+        $or: [
+            { user: userId },
+            { userId }
+        ]
     });
 };
 
 
-// ===============================
-const validateUser = (userId, res) => {
+// ======================================
+// ENSURE CART
+// ======================================
+const ensureCart = async (
+    userId
+) => {
+
+    let cart =
+        await findCart(userId);
+
+
+    if (!cart) {
+
+        cart = new Cart({
+
+            user: userId,
+
+            userId,
+
+            items: []
+        });
+
+        await cart.save();
+
+        console.log(
+            "🆕 Cart created"
+        );
+    }
+
+    return cart;
+};
+
+
+// ======================================
+// VALIDATE USER
+// ======================================
+const validateUser = (
+    userId,
+    res
+) => {
+
     if (!userId) {
-        console.error("❌ USER ID MISSING IN REQUEST");
 
         res.status(401).json({
+
             success: false,
-            message: "User not authenticated properly"
+
+            message:
+                "Authentication required"
         });
 
         return false;
@@ -66,316 +227,577 @@ const validateUser = (userId, res) => {
 };
 
 
-// ===============================
-router.use((req, res, next) => {
-    console.log("🛰 CART ROUTE HIT:", {
-        url: req.originalUrl,
-        method: req.method,
-        body: req.body,
-        userId: req.userId,
-        user: req.user?._id
-    });
-    next();
-});
+// ======================================
+// FORMAT RESPONSE
+// ======================================
+const formatCart = (
+    cart
+) => {
 
+    return {
 
-// ===============================
-router.use((req, res, next) => {
-    if (!req.body) req.body = {};
-    next();
-});
+        ...cart.toObject({
+            virtuals: true
+        }),
 
+        total:
+            calculateTotal(
+                cart.items
+            ),
 
-// ===============================
-// 🔥 FIXED SAFE ASYNC (UPGRADED)
-// ===============================
-const safeAsync = (fn) => async (req, res, next) => {
-    try {
-        await fn(req, res, next);
-    } catch (err) {
-        console.error("🔥 GLOBAL ERROR WRAPPER:", err);
+        itemCount:
+            cart.items.reduce(
 
-        if (next) return next(err);
+                (acc, item) =>
 
-        res.status(500).json({
-            success: false,
-            message: "Internal server crash",
-            error: err.message
-        });
-    }
+                    acc +
+                    item.quantity,
+
+                0
+            )
+    };
 };
 
 
-// ===============================
-const ensureCart = async (userId) => {
-    let cart = await findCart(userId);
+// ======================================
+// LOGGER
+// ======================================
+router.use(
+    (req, res, next) => {
 
-    if (!cart) {
-        cart = new Cart({
-            user: userId,
-            userId: userId,
-            items: []
-        });
+        if (DEBUG) {
 
-        await safeSave(cart);
-        console.log("🆕 NEW CART AUTO-CREATED");
-    }
+            console.log(
 
-    return cart;
-};
+                "🛰 CART:",
 
+                req.method,
 
-// ===============================
-const sanitizeItem = (data) => ({
-    name: String(data.name || "").trim(),
-    price: Number(data.price || 0),
-    image: data.image || "",
-    productId: data.productId || data.name,
-    quantity: 1
-});
-
-
-// ===============================
-const sanitizeString = (str) =>
-    String(str || "").replace(/[<>]/g, "");
-
-
-// ===============================
-const formatCartResponse = (cart) => {
-    try {
-        return {
-            ...cart.toObject({ virtuals: true }),
-            total: cart.getSafeTotal ? cart.getSafeTotal() : 0
-        };
-    } catch (err) {
-        console.error("❌ FORMAT CART ERROR:", err.message);
-        return cart;
-    }
-};
-
-
-// ===============================
-// 🔥 ADD TO CART
-// ===============================
-router.post("/add", protect, safeAsync(async (req, res) => {
-
-    if (!req.userId && !req.user) {
-        return res.status(401).json({
-            success: false,
-            message: "Authentication missing"
-        });
-    }
-
-    const userId = getUserId(req);
-
-    let { name, price, image, productId } = req.body;
-
-    name = sanitizeString(name);
-    image = sanitizeString(image);
-
-    if (!validateUser(userId, res)) return;
-
-    price = Number(price);
-
-    if (!name || !isValidPrice(price)) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid product data"
-        });
-    }
-
-    let cart = await ensureCart(userId);
-
-    if (cart.addItem) {
-        cart.addItem({ name, price, image, productId });
-    } else {
-        const itemIndex = cart.items.findIndex(
-            item => item.name === name
-        );
-
-        if (itemIndex > -1) {
-            cart.items[itemIndex].quantity += 1;
-        } else {
-            cart.items.push(
-                sanitizeItem({ name, price, image, productId })
+                req.originalUrl
             );
         }
+
+        next();
     }
-
-    cart.markModified("items");
-
-    await safeSave(cart); // ✅ FIXED
-
-    res.json({
-        success: true,
-        message: "Item added to cart",
-        cart: formatCartResponse(cart),
-        items: cart.items,
-        total: cart.getSafeTotal ? cart.getSafeTotal() : 0
-    });
-
-}));
+);
 
 
-// ===============================
-router.get("/:userId", protect, safeAsync(async (req, res) => {
+// ======================================
+// HEALTH CHECK
+// ======================================
+router.get(
+    "/health/check",
+    (req, res) => {
 
-    const userId = getUserId(req);
+        return res.json({
 
-    if (!validateUser(userId, res)) return;
+            success: true,
 
-    const cart = await ensureCart(userId);
-
-    res.json({
-        success: true,
-        cart: formatCartResponse(cart),
-        items: cart.items,
-        total: cart.getSafeTotal ? cart.getSafeTotal() : 0
-    });
-
-}));
-
-
-// ===============================
-router.post("/update", protect, safeAsync(async (req, res) => {
-
-    const userId = getUserId(req);
-    const { name, action, forceRemove, quantity, productId } = req.body;
-
-    if (!validateUser(userId, res)) return;
-
-    let cart = await ensureCart(userId);
-
-    if (productId && cart.updateQuantity && quantity !== undefined) {
-        cart.updateQuantity(productId, Number(quantity));
+            service:
+                "cart-service"
+        });
     }
+);
 
-    const itemIndex = cart.items.findIndex(item => item.name === name);
 
-    if (itemIndex > -1) {
+// ======================================
+// GET CART COUNT
+// ======================================
+router.get(
 
+    "/count/:userId",
+
+    protect,
+
+    safeAsync(async (
+        req,
+        res
+    ) => {
+
+        const userId =
+            getUserId(req);
+
+
+        if (
+            !validateUser(
+                userId,
+                res
+            )
+        ) return;
+
+
+        const cart =
+            await ensureCart(userId);
+
+
+        const count = cart.items.length;
+
+
+        return res.json({
+
+            success: true,
+
+            count
+        });
+    })
+);
+
+
+// ======================================
+// GET USER CART
+// ======================================
+router.get(
+
+    "/",
+
+    protect,
+
+    safeAsync(async (
+        req,
+        res
+    ) => {
+
+        const userId =
+            getUserId(req);
+
+
+        if (
+            !validateUser(
+                userId,
+                res
+            )
+        ) return;
+
+
+        const cart =
+            await ensureCart(userId);
+
+
+        return res.json({
+
+            success: true,
+
+            cart:
+                formatCart(cart),
+
+            items:
+                cart.items,
+
+            total:
+                calculateTotal(
+                    cart.items
+                )
+        });
+    })
+);
+
+
+// ======================================
+// ADD TO CART
+// ======================================
+router.post(
+
+    "/add",
+
+    protect,
+
+    safeAsync(async (
+        req,
+        res
+    ) => {
+
+        const userId =
+            getUserId(req);
+
+
+        if (
+            !validateUser(
+                userId,
+                res
+            )
+        ) return;
+
+
+        const item =
+            sanitizeItem(
+                req.body
+            );
+
+
+        if (
+            !item.name ||
+            item.price < 0
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid product"
+            });
+        }
+
+
+        const cart =
+            await ensureCart(userId);
+
+
+        const existingItem =
+            cart.items.find(
+
+                i =>
+
+                    String(i.productId) ===
+
+                    String(item.productId)
+            );
+
+
+        if (existingItem) {
+
+            existingItem.quantity =
+                Math.min(
+
+                    MAX_CART_QTY,
+
+                    existingItem.quantity +
+                    item.quantity
+                );
+
+        } else {
+
+            cart.items.push(item);
+        }
+
+
+        cart.markModified(
+            "items"
+        );
+
+        await cart.save();
+
+
+        return res.json({
+
+            success: true,
+
+            message:
+                "Item added",
+
+            cart:
+                formatCart(cart)
+        });
+    })
+);
+
+
+// ======================================
+// UPDATE CART
+// ======================================
+router.post(
+
+    "/update",
+
+    protect,
+
+    safeAsync(async (
+        req,
+        res
+    ) => {
+
+        const userId =
+            getUserId(req);
+
+
+        if (
+            !validateUser(
+                userId,
+                res
+            )
+        ) return;
+
+
+        const {
+
+            productId,
+
+            action,
+
+            quantity,
+
+            forceRemove
+
+        } = req.body;
+
+
+        const cart =
+            await ensureCart(userId);
+
+
+        const item =
+            cart.items.find(
+
+                i =>
+
+                    String(i.productId) ===
+
+                    String(productId)
+            );
+
+
+        if (!item) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Item not found"
+            });
+        }
+
+
+        // FORCE REMOVE
         if (forceRemove) {
-            cart.items.splice(itemIndex, 1);
-        }
-        else if (action === "increase") {
-            cart.items[itemIndex].quantity += 1;
-        }
-        else if (action === "decrease") {
-            cart.items[itemIndex].quantity -= 1;
 
-            if (cart.items[itemIndex].quantity <= 0) {
-                cart.items.splice(itemIndex, 1);
+            cart.items =
+                cart.items.filter(
+
+                    i =>
+
+                        String(i.productId) !==
+
+                        String(productId)
+                );
+        }
+
+
+        // DIRECT QUANTITY
+        else if (
+            quantity !== undefined
+        ) {
+
+            item.quantity =
+                Math.min(
+
+                    MAX_CART_QTY,
+
+                    Math.max(
+                        1,
+                        Number(quantity)
+                    )
+                );
+        }
+
+
+        // INCREASE
+        else if (
+            action === "increase"
+        ) {
+
+            item.quantity =
+                Math.min(
+
+                    MAX_CART_QTY,
+
+                    item.quantity + 1
+                );
+        }
+
+
+        // DECREASE
+        else if (
+            action === "decrease"
+        ) {
+
+            item.quantity -= 1;
+
+            if (
+                item.quantity <= 0
+            ) {
+
+                cart.items =
+                    cart.items.filter(
+
+                        i =>
+
+                            String(i.productId) !==
+
+                            String(productId)
+                    );
             }
         }
 
-        cart.markModified("items");
 
-        await safeSave(cart); // ✅ FIXED
-    }
+        cart.markModified(
+            "items"
+        );
 
-    res.json({
-        success: true,
-        message: "Cart updated",
-        cart: formatCartResponse(cart),
-        items: cart.items,
-        total: cart.getSafeTotal ? cart.getSafeTotal() : 0
-    });
-
-}));
+        await cart.save();
 
 
-// ===============================
-router.post("/remove", protect, safeAsync(async (req, res) => {
+        return res.json({
 
-    const userId = getUserId(req);
-    const { productId } = req.body;
+            success: true,
 
-    if (!validateUser(userId, res)) return;
+            message:
+                "Cart updated",
 
-    let cart = await ensureCart(userId);
-
-    if (cart.removeItem) {
-        cart.removeItem(productId);
-    }
-
-    cart.markModified("items");
-    await safeSave(cart); // ✅ FIXED
-
-    res.json({
-        success: true,
-        message: "Item removed",
-        cart: formatCartResponse(cart),
-        items: cart.items,
-        total: cart.getSafeTotal ? cart.getSafeTotal() : 0
-    });
-
-}));
+            cart:
+                formatCart(cart)
+        });
+    })
+);
 
 
-// ===============================
-router.post("/clear", protect, safeAsync(async (req, res) => {
+// ======================================
+// REMOVE ITEM
+// ======================================
+router.post(
 
-    const userId = getUserId(req);
+    "/remove",
 
-    if (!validateUser(userId, res)) return;
+    protect,
 
-    let cart = await ensureCart(userId);
+    safeAsync(async (
+        req,
+        res
+    ) => {
 
-    if (cart.clearCart) {
-        cart.clearCart();
-    } else {
+        const userId =
+            getUserId(req);
+
+
+        if (
+            !validateUser(
+                userId,
+                res
+            )
+        ) return;
+
+
+        const {
+            productId
+        } = req.body;
+
+
+        const cart =
+            await ensureCart(userId);
+
+
+        cart.items =
+            cart.items.filter(
+
+                item =>
+
+                    String(item.productId) !==
+
+                    String(productId)
+            );
+
+
+        cart.markModified(
+            "items"
+        );
+
+        await cart.save();
+
+
+        return res.json({
+
+            success: true,
+
+            message:
+                "Item removed",
+
+            cart:
+                formatCart(cart)
+        });
+    })
+);
+
+
+// ======================================
+// CLEAR CART
+// ======================================
+router.post(
+
+    "/clear",
+
+    protect,
+
+    safeAsync(async (
+        req,
+        res
+    ) => {
+
+        const userId =
+            getUserId(req);
+
+
+        if (
+            !validateUser(
+                userId,
+                res
+            )
+        ) return;
+
+
+        const cart =
+            await ensureCart(userId);
+
+
         cart.items = [];
+
+        cart.markModified(
+            "items"
+        );
+
+        await cart.save();
+
+
+        return res.json({
+
+            success: true,
+
+            message:
+                "Cart cleared",
+
+            cart:
+                formatCart(cart)
+        });
+    })
+);
+
+
+// ======================================
+// ERROR HANDLER
+// ======================================
+router.use(
+
+    (err, req, res, next) => {
+
+        console.error(
+            "🚨 CART ERROR:",
+            err
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                process.env.NODE_ENV ===
+                "production"
+                    ? "Cart operation failed"
+                    : err.message
+        });
     }
-
-    cart.markModified("items");
-
-    await safeSave(cart); // ✅ FIXED
-
-    res.json({
-        success: true,
-        message: "Cart cleared",
-        items: [],
-        total: 0
-    });
-
-}));
+);
 
 
-// ===============================
-router.get("/count/:userId", protect, safeAsync(async (req, res) => {
-
-    const userId = getUserId(req);
-
-    if (!validateUser(userId, res)) return;
-
-    const cart = await ensureCart(userId);
-
-    const count = cart.items.reduce((acc, item) => acc + item.quantity, 0);
-
-    res.json({
-        success: true,
-        count
-    });
-
-}));
-
-
-// ===============================
-router.get("/health/check", (req, res) => {
-    res.json({ success: true, message: "Cart route working ✅" });
-});
-
-
-// ===============================
-router.use((err, req, res, next) => {
-    console.error("🚨 UNHANDLED CART ROUTE ERROR:", err);
-
-    res.status(500).json({
-        success: false,
-        message: "Unhandled cart error",
-        error: err.message
-    });
-});
-
-
+// ======================================
+// EXPORT
+// ======================================
 module.exports = router;

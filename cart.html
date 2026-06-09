@@ -1,493 +1,758 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Cart</title>
+    <meta charset="UTF-8">
+    <title>Cart</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f6f6f6;
-}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f6f6f6;
+        }
 
-/* 🔥 NEW SMOOTH UI UPGRADE */
-body {
-    transition: all 0.3s ease;
-}
+        /* 🔥 NEW SMOOTH UI UPGRADE */
+        body {
+            transition: all 0.3s ease;
+        }
 
-.cart-title {
-    text-align: center;
-    margin: 20px;
-}
+        .cart-title {
+            text-align: center;
+            margin: 20px;
+        }
 
-.cart-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-}
+        .cart-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
 
-.cart-card {
-    width: 220px;
-    background: white;
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .cart-card {
+            width: 220px;
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
 
-.cart-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-}
+        .cart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
 
-.cart-card img {
-    width: 100%;
-    height: 150px;
-    object-fit: contain;
-    background: #fafafa;
-}
+        .cart-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            background: #fafafa;
+        }
 
-.cart-card h3 {
-    margin: 10px 0;
-}
+        .cart-card h3 {
+            margin: 10px 0;
+        }
 
-.price {
-    color: green;
-    font-weight: bold;
-}
+        .price {
+            color: green;
+            font-weight: bold;
+        }
 
-.qty-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-}
+        .qty-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
 
-.qty-controls button {
-    padding: 5px 10px;
-    border: none;
-    background: green;
-    color: white;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background 0.2s ease;
-}
+        .qty-controls button {
+            padding: 5px 10px;
+            border: none;
+            background: green;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.2s ease;
+        }
 
-.qty-controls button:hover {
-    background: #1b5e20;
-}
+        .qty-controls button:hover {
+            background: #1b5e20;
+        }
 
-.remove-btn {
-    margin-top: 10px;
-    background: red;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 5px;
-}
+        .remove-btn {
+            margin-top: 10px;
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
 
-.cart-summary {
-    text-align: center;
-    margin: 30px;
-    font-size: 20px;
-    font-weight: bold;
-}
+        .cart-summary {
+            text-align: center;
+            margin: 30px;
+            font-size: 20px;
+            font-weight: bold;
+        }
 
-.checkout-btn{
-    padding:12px 30px;
-    background:#2e7d32;
-    color:white;
-    border:none;
-    border-radius:8px;
-    font-size:16px;
-    cursor:pointer;
-}
+        .checkout-btn {
+            padding: 12px 30px;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
 
-.checkout-btn:hover{
-    background:#1b5e20;
-}
+        .checkout-btn:hover {
+            background: #1b5e20;
+        }
 
-@media (max-width: 600px){
-    .cart-card{
-        width: 90%;
-    }
-}
+        @media (max-width: 600px) {
+            .cart-card {
+                width: 90%;
+            }
+        }
 
-/* 🔥 NEW LOADING STYLE */
-.loading {
-    text-align:center;
-    font-size:18px;
-    margin-top:40px;
-}
+        /* 🔥 NEW LOADING STYLE */
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 40px;
+        }
 
-/* 🔥 ERROR BOX (NEW) */
-.error-box{
-    text-align:center;
-    color:red;
-    margin-top:20px;
-}
+        /* 🔥 ERROR BOX (NEW) */
+        .error-box {
+            text-align: center;
+            color: red;
+            margin-top: 20px;
+        }
 
-/* 🔥 NEW: EMPTY STATE UI */
-.empty-state{
-    text-align:center;
-    margin-top:40px;
-    color:#777;
-    font-size:18px;
-}
+        /* 🔥 NEW: EMPTY STATE UI */
+        .empty-state {
+            text-align: center;
+            margin-top: 40px;
+            color: #777;
+            font-size: 18px;
+        }
 
-/* 🔥 TOAST SYSTEM (NEW UI/UX) */
-.toast{
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    background:#333;
-    color:#fff;
-    padding:12px 18px;
-    border-radius:8px;
-    opacity:0;
-    transform:translateY(20px);
-    transition:all 0.3s ease;
-    z-index:9999;
-}
-.toast.show{
-    opacity:1;
-    transform:translateY(0);
-}
+        /* 🔥 TOAST SYSTEM (NEW UI/UX) */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 8px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
 
-/* 🔥 BUTTON LOADING STATE */
-button.loading{
-    opacity:0.7;
-    pointer-events:none;
-}
-</style>
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 🔥 BUTTON LOADING STATE */
+        button.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
 
 </head>
 
 <body>
 
-<h2 class="cart-title">🛒 Your Cart</h2>
+    <h2 class="cart-title">🛒 Your Cart</h2>
 
-<div id="cartContainer" class="cart-grid"></div>
+    <div id="cartContainer" class="cart-grid"></div>
 
-<div class="cart-summary">
-    <h3 id="totalPrice"></h3>
+    <div class="cart-summary">
+        <h3 id="totalPrice"></h3>
 
-    <div style="text-align:center; margin-top:30px;">
-    <button onclick="goToCheckout()" class="checkout-btn" id="checkoutBtn">
-        Proceed to Checkout 🚀
-    </button>
-</div>
-</div>
+        <div style="text-align:center; margin-top:30px;">
+            <button class="checkout-btn" id="checkoutBtn">
+                Proceed to Checkout 🚀
+            </button>
+        </div>
+    </div>
 
-<!-- 🔥 TOAST -->
-<div id="toast" class="toast"></div>
+    <!-- 🔥 TOAST -->
+    <div id="toast" class="toast"></div>
 
-<script>
-const API = "http://https://makhana-website.onrender.com/api";
-
-
-// =======================
-// 🔥 TOAST FUNCTION (NEW)
-// =======================
-function showToast(msg){
-    const toast = document.getElementById("toast");
-    if(!toast) return;
-
-    toast.innerText = msg;
-    toast.classList.add("show");
-
-    setTimeout(()=>{
-        toast.classList.remove("show");
-    }, 3000);
-}
+    <script>
+        const API = "https://consoling-backspace-elongated.ngrok-free.dev/api";
 
 
-// 🔥 NEW SAFE FETCH WRAPPER (ADDED)
-async function safeFetch(url, options = {}) {
-    try {
-        const res = await fetch(url, {
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                ...(options.headers || {})
-            },
-            ...options
-        });
+        // =======================
+        // 🔥 TOAST FUNCTION (NEW)
+        // =======================
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            if (!toast) return;
 
-        const data = await res.json().catch(() => ({}));
-        return { ok: res.ok, data };
+            toast.innerText = msg;
+            toast.classList.add("show");
 
-    } catch (err) {
-        console.error("Fetch error:", err);
-        return { ok: false, data: {} };
-    }
-}
-
-
-// 🔥 NEW LOADING STATE
-function showLoading() {
-    const container = document.getElementById("cartContainer");
-    if (container) {
-        container.innerHTML = `<div class="loading">Loading cart...</div>`;
-    }
-}
-
-
-// =======================
-// GET USER
-// =======================
-async function getUser() {
-    try {
-        const res = await fetch(API + "/auth/check", {
-            credentials: "include"
-        });
-
-        if (!res.ok) return null;
-
-        const data = await res.json();
-        return data.user;
-
-    } catch (err) {
-        console.error("Auth error:", err);
-        return null;
-    }
-}
-
-
-// =======================
-// FETCH CART (IMPROVED)
-// =======================
-async function fetchCart() {
-
-    showLoading();
-
-    const user = await getUser();
-
-    if (!user) {
-        showToast("Please login first");
-        window.location.href = "login.html";
-        return;
-    }
-
-    try {
-        const { ok, data } = await safeFetch(API + "/cart/" + user._id);
-
-        console.log("🛒 CART DATA:", data);
-
-        if (!ok) {
-            throw new Error("Cart API failed");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3000);
         }
 
-        renderCart(data.items || []);
 
-    } catch (err) {
-        console.error("Cart fetch error:", err);
+        // 🔥 NEW SAFE FETCH WRAPPER (ADDED)
+        async function safeFetch(url, options = {}) {
+            try {
+                const res = await fetch(url, {
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(options.headers || {})
+                    },
+                    ...options
+                });
 
-        document.getElementById("cartContainer").innerHTML =
-            "<h3 class='error-box'>Failed to load cart ❌</h3>";
-    }
-}
+                const data = await res.json().catch(() => ({}));
+                return { ok: res.ok, data };
 
-
-// =======================
-// 🔥 IMAGE FIXER (NEW)
-// =======================
-function fixImagePath(path){
-    if(!path) return "images/placeholder.png";
-
-    if(path.includes("localhost")) return path;
-
-    return path.startsWith("images/")
-        ? path
-        : "images/" + path;
-}
+            } catch (err) {
+                console.error("Fetch error:", err);
+                return { ok: false, data: {} };
+            }
+        }
 
 
-// =======================
-// 🔥 SAFE TEXT ESCAPE (SECURITY ADD)
-// =======================
-function escapeHTML(str){
-    return String(str || "").replace(/[&<>"']/g, tag => ({
-        '&':'&amp;',
-        '<':'&lt;',
-        '>':'&gt;',
-        '"':'&quot;',
-        "'":'&#39;'
-    }[tag]));
-}
+        // 🔥 NEW LOADING STATE
+        function showLoading() {
+            const container = document.getElementById("cartContainer");
+            if (container) {
+                container.innerHTML = `<div class="loading">Loading cart...</div>`;
+            }
+        }
 
 
-// =======================
-// RENDER CART (UPGRADED)
-// =======================
-function renderCart(items) {
-    const container = document.getElementById("cartContainer");
-    const totalBox = document.getElementById("totalPrice");
+        // =======================
+        // GET USER
+        // =======================
+        async function getUser() {
+            try {
+                const res = await fetch(
 
-    if (!container || !totalBox) return;
+                    API + "/auth/check",
 
-    container.innerHTML = "";
+                    {
+                        credentials: "include"
+                    }
+                );
 
-    if (!items.length) {
-        container.innerHTML = "<div class='empty-state'>Your cart is empty 😢</div>";
-        totalBox.innerText = "";
-        return;
-    }
+                if (!res.ok) return null;
 
-    let total = 0;
+                const data = await res.json();
+                return data.user;
 
-    items.forEach(item => {
-        total += item.price * item.quantity;
+            } catch (err) {
+                console.error("Auth error:", err);
+                return null;
+            }
+        }
 
-        const card = document.createElement("div");
-        card.className = "cart-card";
 
-        const imgSrc = fixImagePath(item.image);
+        // =======================
+        // FETCH CART (IMPROVED)
+        // =======================
+        async function fetchCart() {
 
-        card.innerHTML = `
-            <img src="${imgSrc}" onerror="this.src='images/placeholder.png'" />
-            <h3>${escapeHTML(item.name)}</h3>
-            <p class="price">₹${item.price}</p>
+            showLoading();
 
-            <div class="qty-controls">
-                <button onclick="updateQty('${item.name}', 'decrease')" aria-label="Decrease quantity">➖</button>
-                <span>${item.quantity}</span>
-                <button onclick="updateQty('${item.name}', 'increase')" aria-label="Increase quantity">➕</button>
+            const user = await getUser();
+
+            if (!user) {
+
+                showToast(
+                    "Please login first"
+                );
+
+                setTimeout(() => {
+
+                    window.location.href =
+                        "login.html";
+
+                }, 1500);
+
+                return;
+            }
+
+            try {
+                const { ok, data } = await safeFetch(
+
+                    API + "/cart"
+                );
+
+                console.log("🛒 CART DATA:", data);
+
+                if (!ok) {
+                    throw new Error("Cart API failed");
+                }
+
+                renderCart(data.items || []);
+
+            } catch (err) {
+                console.error("Cart fetch error:", err);
+
+                document.getElementById("cartContainer").innerHTML =
+                    "<h3 class='error-box'>Failed to load cart ❌</h3>";
+            }
+        }
+
+
+        // =======================
+        // 🔥 IMAGE FIXER (NEW)
+        // =======================
+        function fixImagePath(path) {
+
+            if (!path) {
+                return "images/plain.jpeg";
+            }
+
+            const fileName = path.split("/").pop();
+
+            const validImages = {
+
+                "plain.jpeg": "images/plain.jpeg",
+                "plain.png": "images/plain.jpeg",
+
+                "pudina.jpeg": "images/pudina.jpeg",
+                "pudina.png": "images/pudina.jpeg",
+
+                "peri.jpeg": "images/peri.jpeg",
+                "peri.png": "images/peri.jpeg",
+
+                "himalayan-pepper.jpeg": "images/himalayan-pepper.jpeg",
+                "himalayan-pepper.png": "images/himalayan-pepper.jpeg"
+            };
+
+            return validImages[fileName]
+                || path;
+        }
+
+        // =======================
+        // 🔥 SAFE TEXT ESCAPE (SECURITY ADD)
+        // =======================
+        function escapeHTML(str) {
+            return String(str || "").replace(/[&<>"']/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[tag]));
+        }
+
+
+        // =======================
+        // RENDER CART (UPGRADED)
+        // =======================
+        function renderCart(items) {
+
+            const container =
+                document.getElementById(
+                    "cartContainer"
+                );
+
+            const totalBox =
+                document.getElementById(
+                    "totalPrice"
+                );
+
+            if (
+                !container ||
+                !totalBox
+            ) return;
+
+            // CLEAR OLD UI
+            container.innerHTML = "";
+
+            // EMPTY CART
+            if (
+                !Array.isArray(items) ||
+                !items.length
+            ) {
+
+                container.innerHTML = `
+
+            <div class="empty-state">
+
+                Your cart is empty 😢
+
             </div>
-
-            <button class="remove-btn" onclick="removeItem('${item.name}')">Remove</button>
         `;
 
-        container.appendChild(card);
-    });
+                totalBox.innerText = "";
 
-    totalBox.innerText = "Total: ₹" + total;
-}
+                return;
+            }
+
+            let total = 0;
+
+            items.forEach(item => {
+
+                // SAFE VALUES
+                const name =
+                    item.name || "Product";
+
+                const price =
+                    Number(item.price) || 0;
+
+                const quantity =
+                    Number(item.quantity) || 1;
+
+                const image =
+                    fixImagePath(
+                        item.image
+                    );
+
+                total +=
+                    price * quantity;
+
+                // CARD
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+                card.className =
+                    "cart-card";
+
+                // SAFE HTML
+                card.innerHTML = `
+
+            <img
+                src="${image}"
+                alt="${name}"
+                loading="lazy"
+                class="cart-image"
+            />
+
+            <h3>
+${name.replace("&amp;", "&")}
+</h3>
+
+            <p class="price">
+                ₹${price}
+            </p>
+
+            <div class="qty-controls">
+
+                <button
+                    class="decrease-btn"
+                    data-name="${name}"
+                    aria-label="Decrease quantity"
+                >
+                    ➖
+                </button>
+
+                <span>
+                    ${quantity}
+                </span>
+
+                <button
+                    class="increase-btn"
+                    data-name="${name}"
+                    aria-label="Increase quantity"
+                >
+                    ➕
+                </button>
+
+            </div>
+
+            <button
+                class="remove-btn"
+                data-name="${name}"
+            >
+                Remove
+            </button>
+        `;
+
+                // APPEND CARD
+                container.appendChild(
+                    card
+                );
+
+                // =======================
+                // IMAGE FALLBACK
+                // =======================
+                const img =
+                    card.querySelector(
+                        "img"
+                    );
+
+                if (img) {
+
+                    img.addEventListener(
+                        "error",
+                        () => {
+                            img.onerror = null;
+                            img.src = "images/plain.jpeg";
+                        }
+                    );
+                }
+
+                // =======================
+                // DECREASE BUTTON
+                // =======================
+                const decreaseBtn =
+                    card.querySelector(
+                        ".decrease-btn"
+                    );
+
+                if (decreaseBtn) {
+
+                    decreaseBtn.addEventListener(
+
+                        "click",
+
+                        () => {
+
+                            updateQty(
+                                item.productId,
+                                "decrease"
+                            );
+                        }
+                    );
+                }
+
+                // =======================
+                // INCREASE BUTTON
+                // =======================
+                const increaseBtn =
+                    card.querySelector(
+                        ".increase-btn"
+                    );
+
+                if (increaseBtn) {
+
+                    increaseBtn.addEventListener(
+
+                        "click",
+
+                        () => {
+
+                            updateQty(
+                                item.productId,
+                                "increase"
+                            );
+                        }
+                    );
+                }
+
+                // =======================
+                // REMOVE BUTTON
+                // =======================
+                const removeBtn =
+                    card.querySelector(
+                        ".remove-btn"
+                    );
+
+                if (removeBtn) {
+
+                    removeBtn.addEventListener(
+
+                        "click",
+
+                        () => {
+
+                            removeItem(
+                                item.productId
+                            );
+                        }
+                    );
+                }
+            });
+
+            // TOTAL PRICE
+            totalBox.innerText =
+                "Total: ₹" + total;
+        }
+
+        // =======================
+        // 🔥 BUTTON LOADING HELPER (NEW)
+        // =======================
+        function setButtonLoading(state) {
+            const btn = document.getElementById("checkoutBtn");
+            if (!btn) return;
+
+            if (state) {
+                btn.classList.add("loading");
+                btn.innerText = "Processing...";
+            } else {
+                btn.classList.remove("loading");
+                btn.innerText = "Proceed to Checkout 🚀";
+            }
+        }
 
 
-// =======================
-// 🔥 BUTTON LOADING HELPER (NEW)
-// =======================
-function setButtonLoading(state){
-    const btn = document.getElementById("checkoutBtn");
-    if(!btn) return;
+        // =======================
+        // UPDATE QTY (SAFE)
+        // =======================
+        async function updateQty(productId, action) {
 
-    if(state){
-        btn.classList.add("loading");
-        btn.innerText = "Processing...";
-    } else {
-        btn.classList.remove("loading");
-        btn.innerText = "Proceed to Checkout 🚀";
-    }
-}
+            try {
+
+                const { ok } = await safeFetch(
+                    API + "/cart/update",
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            productId,
+                            action
+                        })
+                    }
+                );
+
+                if (!ok) {
+                    throw new Error("Update failed");
+                }
+
+                showToast("Cart updated");
+
+                fetchCart();
+
+            } catch (err) {
+
+                console.error(err);
+
+                showToast("Failed to update item");
+            }
+        }
+        // =======================
+        // REMOVE ITEM (SAFE)
+        // =======================
+
+        async function removeItem(productId) {
+
+            try {
+
+                const { ok } = await safeFetch(
+                    API + "/cart/remove",
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            productId
+                        })
+                    }
+                );
+
+                if (!ok) {
+                    throw new Error("Remove failed");
+                }
+
+                showToast("Item removed");
+
+                fetchCart();
+
+            } catch (err) {
+
+                console.error(err);
+
+                showToast("Failed to remove item");
+            }
+        }
+
+        // =======================
+        // CHECKOUT
+        // =======================
+        function goToCheckout() {
+            setButtonLoading(true);
+
+            setTimeout(() => {
+                window.location.href = "checkout.html";
+            }, 300);
+        }
 
 
-// =======================
-// UPDATE QTY (SAFE)
-// =======================
-async function updateQty(name, action) {
-    try {
-        const { ok } = await safeFetch(API + "/cart/update", {
-            method: "POST",
-            body: JSON.stringify({ name, action })
+        // =======================
+        // 🔥 GLOBAL ERROR HANDLER (NEW)
+        // =======================
+        window.addEventListener("error", (e) => {
+            console.error("Global Error:", e.message);
         });
 
-        if (!ok) throw new Error("Update failed");
 
-        showToast("Cart updated");
-        fetchCart();
-
-    } catch (err) {
-        console.error("Update error:", err);
-        showToast("Failed to update item ❌");
-    }
-}
-
-
-// =======================
-// REMOVE ITEM (SAFE)
-// =======================
-async function removeItem(name) {
-    try {
-        const { ok } = await safeFetch(API + "/cart/update", {
-            method: "POST",
-            body: JSON.stringify({ name, forceRemove: true })
+        // =======================
+        // 🔥 PROMISE ERROR HANDLER (NEW)
+        // =======================
+        window.addEventListener("unhandledrejection", (e) => {
+            console.error("Unhandled Promise:", e.reason);
         });
 
-        if (!ok) throw new Error("Remove failed");
 
-        showToast("Item removed");
-        fetchCart();
+        // =======================
+        // 🔥 SAFE DOM READY INIT (FIXES addEventListener NULL)
+        // =======================
+        document.addEventListener(
 
-    } catch (err) {
-        console.error("Remove error:", err);
-        showToast("Failed to remove item ❌");
-    }
-}
+            "DOMContentLoaded",
 
+            () => {
 
-// =======================
-// CHECKOUT
-// =======================
-function goToCheckout(){
-    setButtonLoading(true);
+                try {
 
-    setTimeout(()=>{
-        window.location.href = "checkout.html";
-    }, 300);
-}
+                    // LOAD CART
+                    fetchCart();
 
 
-// =======================
-// 🔥 SAFE AUTO REFRESH FIXED
-// =======================
-let refreshLock = false;
+                    // =======================
+                    // CHECKOUT BUTTON
+                    // =======================
+                    const checkoutBtn =
+                        document.getElementById(
+                            "checkoutBtn"
+                        );
 
-setInterval(() => {
-    if(!refreshLock){
-        refreshLock = true;
-        fetchCart().finally(()=> refreshLock = false);
-    }
-}, 5000);
+                    if (checkoutBtn) {
 
+                        checkoutBtn.addEventListener(
 
-// =======================
-// 🔥 GLOBAL ERROR HANDLER (NEW)
-// =======================
-window.addEventListener("error", (e)=>{
-    console.error("Global Error:", e.message);
-});
+                            "click",
 
+                            () => {
 
-// =======================
-// 🔥 PROMISE ERROR HANDLER (NEW)
-// =======================
-window.addEventListener("unhandledrejection", (e)=>{
-    console.error("Unhandled Promise:", e.reason);
-});
+                                goToCheckout();
+                            }
+                        );
+                    }
 
 
-// =======================
-// 🔥 SAFE DOM READY INIT (FIXES addEventListener NULL)
-// =======================
-document.addEventListener("DOMContentLoaded", () => {
-    try {
-        fetchCart();
-    } catch (err) {
-        console.error("Init error:", err);
-    }
-});
+                    console.log(
+                        "✅ Cart initialized"
+                    );
 
-// INIT (kept existing behavior)
-fetchCart();
-</script>
+                } catch (err) {
+
+                    console.error(
+
+                        "❌ Init error:",
+
+                        err
+                    );
+                }
+            }
+        );
+
+
+    </script>
 
 </body>
+
 </html>

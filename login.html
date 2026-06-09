@@ -1,60 +1,149 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Login - Salted Soul</title>
 
     <!-- CSS -->
     <link rel="stylesheet" href="css/auth.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
 
-<div class="auth-container">
+    <div class="auth-container">
 
-    <!-- LEFT SIDE IMAGE -->
-    <div class="auth-left"></div>
+        <!-- LEFT SIDE IMAGE -->
+        <div class="auth-left">
 
-    <!-- RIGHT SIDE FORM -->
-    <div class="auth-right">
-        <div class="auth-box">
+            <div class="brand-card">
 
-            <h2>Welcome Back</h2>
+                <img src="images/hero.jpeg" alt="Salted Soul">
 
-            <!-- ✅ MESSAGE BOX (NEW - for errors/success) -->
-            <div id="messageBox" class="message-box"></div>
+                <h1>
+                    Premium Makhana
+                </h1>
 
-            <!-- ✅ FORM CONNECTED TO JS -->
-            <form id="loginForm" onsubmit="login(event)">
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Password" required>
+                <p>
+                    Healthy, crunchy and delicious snacks crafted for modern lifestyles.
+                </p>
 
-                <!-- ✅ BUTTON CONNECTED -->
-                <button type="submit" id="loginBtn">Login</button>
-            </form>
-
-            <!-- GOOGLE BUTTON (TEMP FIX) -->
-            <button class="google-btn" onclick="handleGoogleLogin()">
-                Login with Google
-            </button>
-
-            <p class="auth-link">
-                Don’t have an account? <a href="signup.html">Signup</a>
-            </p>
+            </div>
 
         </div>
+
+        <!-- RIGHT SIDE FORM -->
+        <div class="auth-right">
+            <div class="auth-box">
+                <div class="auth-logo">
+                    <img src="images/logo.jpeg">
+                </div>
+
+                <h2>Welcome Back</h2>
+                <p class="auth-subtitle">
+                    Access your Salted Soul account and continue shopping.
+                </p>
+
+                <!-- ✅ MESSAGE BOX (NEW - for errors/success) -->
+                <div id="messageBox" class="message-box"></div>
+
+                <!-- ✅ FORM CONNECTED TO JS -->
+                <form id="loginForm" onsubmit="login(event)">
+                    <input type="email" id="email" placeholder="Email" required>
+                    <div class="password-box">
+
+                        <input type="password" id="password" placeholder="Password" required>
+
+                        <i class="fa-regular fa-eye" id="togglePassword" onclick="togglePassword()"></i>
+
+                    </div>
+                    <div class="remember-row">
+                        <label>
+                            <input type="checkbox">
+                            Remember Me
+                        </label>
+
+                        <a href="#">
+                            Forgot Password?
+                        </a>
+                    </div>
+
+                    <!-- ✅ BUTTON CONNECTED -->
+                    <button type="submit" id="loginBtn">Login</button>
+                </form>
+
+                <button
+    type="button"
+    class="google-btn"
+    onclick="googleLogin()">
+
+    <i class="fa-brands fa-google"></i>
+    Continue with Google
+
+</button>
+                <p class="auth-link">
+                    Don’t have an account? <a href="signup.html">Signup</a>
+                </p>
+
+            </div>
+        </div>
+
     </div>
 
-</div>
+    <!-- JS -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
 
-<!-- JS -->
-<script src="js/auth.js"></script>
+    <!-- ✅ GOOGLE TEMP HANDLER -->
+    <script>
+        function handleGoogleLogin() {
+            alert("Google login coming in Phase 3 🚀");
+        }
+    </script>
 
-<!-- ✅ GOOGLE TEMP HANDLER -->
+    <script>
+        function togglePassword() {
+
+            const pass =
+                document.getElementById("password");
+
+            const icon =
+                document.getElementById("togglePassword");
+
+            if (pass.type === "password") {
+
+                pass.type = "text";
+
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+
+            } else {
+
+                pass.type = "password";
+
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
+
+    <script>
+        function googleLogin() {
+
+            window.location.href =
+                "/api/auth/google";
+
+        }
+    </script>
+
 <script>
-function handleGoogleLogin() {
-    alert("Google login coming in Phase 3 🚀");
+function googleLogin() {
+
+    window.location.href =
+        "https://consoling-backspace-elongated.ngrok-free.dev/api/auth/google";
 }
 </script>
-
 </body>
+
 </html>

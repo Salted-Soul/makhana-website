@@ -57,7 +57,7 @@ async function loadStats() {
     try {
         showLoading(statsBox);
 
-        const data = await safeFetch("http://https://makhana-website.onrender.com/api/admin/stats");
+        const data = await safeFetch("https://consoling-backspace-elongated.ngrok-free.dev/api/admin/stats");
 
         if (!data.success) {
             errorBox.innerText = data.message;
@@ -87,7 +87,7 @@ async function loadUsers() {
     try {
         showLoading(usersBox);
 
-        const data = await safeFetch("http://https://makhana-website.onrender.com/api/admin/users");
+        const data = await safeFetch("https://consoling-backspace-elongated.ngrok-free.dev/api/admin/users");
 
         if (!data.success) return;
 
@@ -125,7 +125,7 @@ async function loadOrders() {
     try {
         showLoading(ordersBox);
 
-        const data = await safeFetch("http://https://makhana-website.onrender.com/api/admin/orders");
+        const data = await safeFetch("https://consoling-backspace-elongated.ngrok-free.dev/api/admin/orders");
 
         if (!data.success) return;
 
@@ -181,7 +181,7 @@ function renderOrders() {
 async function updateStatus(orderId, status) {
     try {
         await safeFetch(
-            `http://https://makhana-website.onrender.com/api/admin/order/${orderId}/status`,
+            `https://consoling-backspace-elongated.ngrok-free.dev/api/admin/order/${orderId}/status`,
             {
                 method: "PUT",
                 body: JSON.stringify({ status })

@@ -1,237 +1,773 @@
 const jwt = require("jsonwebtoken");
+
+const mongoose = require("mongoose");
+
 const User = require("../models/User");
 
-/**
- * 🧠 INTERNAL: Safe token extraction (NEW - NON BREAKING)
- */
-const extractToken = (req) => {
-  // Header (legacy support)
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    return req.headers.authorization.split(" ")[1];
-  }
 
-  // Cookie (primary)
-  if (req.cookies && req.cookies.token) {
-    return req.cookies.token;
-  }
+// ======================================
+// ENVIRONMENT
+// ======================================
+const NODE_ENV =
+    process.env.NODE_ENV || "development";
 
-  return null;
-};
+const DEBUG =
+    process.env.DEBUG === "true";
 
-/**
- * 🧠 INTERNAL: Verify JWT safely (NEW)
- */
-const verifyToken = (token) => {
-  try {
-    if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET missing in ENV"); // 🔥 ADDED
-      throw new Error("JWT_SECRET not configured");
-    }
 
-    return jwt.verify(token, process.env.JWT_SECRET);
-  } catch (err) {
-    console.warn("Token verification failed:", err.message); // 🔥 ADDED
-    return null;
-  }
-};
+// ======================================
+// ENV VALIDATION
+// ======================================
+if (!process.env.JWT_SECRET) {
 
-/**
- * 🧠 INTERNAL: Attach user safely (NEW)
- */
-const attachUserToRequest = (req, user) => {
-  req.user = user;          // ✅ your existing logic (kept)
-  req.userId = user._id;    // ✅ your existing logic (kept)
-};
+    console.error(
+        "❌ JWT_SECRET missing in environment variables"
+    );
 
-/**
- * @desc    Protect routes (JWT Auth)
- * @access  Private
- */
-const protect = async (req, res, next) => {
-  try {
-    const token = extractToken(req);
-
-    // ===============================
-    // NO TOKEN
-    // ===============================
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "No token, authorization denied",
-      });
-    }
-
-    // ===============================
-    // VERIFY TOKEN
-    // ===============================
-    const decoded = verifyToken(token);
-    console.log("DECODED TOKEN:", decoded);
-
-    if (!decoded || (!decoded.id && !decoded._id)) {
-  return res.status(401).json({
-    success: false,
-    message: "Token expired or invalid",
-  });
+    process.exit(1);
 }
 
-    // ===============================
-    // FETCH USER FROM DB
-    // ===============================
-    const userId = decoded.id || decoded._id;
 
-const user = await User.findById(userId).select("-password");
+// ======================================
+// RESPONSE HELPER
+// ======================================
+const sendError = (
+    res,
+    statusCode,
+    message
+) => {
 
-    if (!user) {
-      return res.status(401).json({
+    return res.status(statusCode).json({
+
         success: false,
-        message: "User not found",
-      });
-    }
 
-    // ===============================
-    // 🔥 ROLE DEFAULT SAFETY (ADDED)
-    // ===============================
-    if (!user.role) {
-      user.role = "user"; // fallback (non-breaking)
-    }
-
-    // ===============================
-    // ATTACH USER TO REQUEST
-    // ===============================
-    attachUserToRequest(req, user);
-    console.log("REQ USER:", req.user);
-
-    next();
-  } catch (error) {
-    console.error("Auth Error:", error.message);
-
-    return res.status(401).json({
-      success: false,
-      message: "Not authorized, token failed",
+        message
     });
-  }
 };
 
-/**
- * @desc    Admin middleware
- * @access  Private/Admin
- */
-const adminOnly = (req, res, next) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized",
-      });
+
+// ======================================
+// SAFE TOKEN EXTRACTION
+// ======================================
+const extractToken = (req) => {
+
+    try {
+
+        // ======================================
+        // AUTHORIZATION HEADER
+        // ======================================
+        const authHeader =
+            req.headers.authorization;
+
+        if (
+
+            authHeader &&
+
+            typeof authHeader === "string" &&
+
+            authHeader.startsWith("Bearer ")
+
+        ) {
+
+            const token =
+                authHeader
+                    .split(" ")[1]
+                    ?.trim();
+
+            if (token) {
+
+                return token;
+            }
+        }
+
+
+        // ======================================
+        // COOKIE TOKEN
+        // ======================================
+        if (
+
+            req.cookies &&
+
+            req.cookies.token
+
+        ) {
+
+            const token =
+                String(
+                    req.cookies.token
+                ).trim();
+
+            if (token) {
+
+                return token;
+            }
+        }
+
+
+        return null;
+
+    } catch (error) {
+
+        console.error(
+            "❌ TOKEN EXTRACTION ERROR:",
+            error.message
+        );
+
+        return null;
     }
-
-    // ===============================
-    // ROLE HARDENING (UPGRADED)
-    // ===============================
-    if (!req.user.role || req.user.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error("Admin Middleware Error:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
 };
 
-/**
- * @desc    Optional middleware (does not block if not logged in)
- */
-const optionalAuth = async (req, res, next) => {
-  try {
-    const token = extractToken(req);
 
-    if (!token) {
-      return next();
+// ======================================
+// VERIFY JWT TOKEN
+// ======================================
+const verifyToken = (token) => {
+
+    try {
+
+        if (!token) {
+
+            return null;
+        }
+
+
+        const decoded = jwt.verify(
+
+            token,
+
+            process.env.JWT_SECRET,
+
+            {
+
+                algorithms: ["HS256"]
+            }
+        );
+
+
+        // ======================================
+        // SAFE PAYLOAD VALIDATION
+        // ======================================
+        if (
+
+            !decoded ||
+
+            typeof decoded !== "object"
+
+        ) {
+
+            return null;
+        }
+
+
+        if (
+
+            !decoded.id &&
+
+            !decoded._id
+
+        ) {
+
+            return null;
+        }
+
+
+        return decoded;
+
+    } catch (error) {
+
+        if (DEBUG) {
+
+            console.warn(
+                "⚠ JWT VERIFY FAILED:",
+                error.message
+            );
+        }
+
+        return null;
     }
-
-    const decoded = verifyToken(token);
-
-    if (!decoded || !decoded.id) {
-      return next(); // ❌ do not block
-    }
-
-    const user = await User.findById(decoded.id).select("-password");
-
-    if (user) {
-      attachUserToRequest(req, user);
-    }
-
-    next();
-  } catch (error) {
-    // ❌ NEVER block request
-    next();
-  }
 };
 
-/**
- * 🧠 OPTIONAL: SELF ACCESS GUARD (NEW - FUTURE SAFE)
- * Example: user can only access their own data
- */
-const isSelf = (req, res, next) => {
-  try {
-    const requestedUserId =
-      req.params.userId || req.body.userId || req.query.userId;
 
-    if (!requestedUserId) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID required",
-      });
+// ======================================
+// NORMALIZE ROLE
+// ======================================
+const normalizeRole = (role) => {
+
+    if (!role) {
+
+        return "user";
     }
 
-    if (req.userId.toString() !== requestedUserId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied",
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error("SELF CHECK ERROR:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
+    return String(role)
+        .trim()
+        .toLowerCase();
 };
 
-/**
- * 🔥 NEW: ROLE CHECK HELPER (ADDED, NON-BREAKING)
- */
-const hasRole = (role) => {
-  return (req, res, next) => {
-    if (!req.user || req.user.role !== role) {
-      return res.status(403).json({
-        success: false,
-        message: `Access denied - ${role} only`,
-      });
-    }
-    next();
-  };
+
+// ======================================
+// ATTACH USER TO REQUEST
+// ======================================
+const attachUserToRequest = (
+    req,
+    user
+) => {
+
+    const normalizedRole =
+        normalizeRole(user.role);
+
+    req.user = {
+
+        _id: user._id,
+
+        id: user._id,
+
+        name: user.name,
+
+        email: user.email,
+
+        role: normalizedRole,
+
+        isBlocked:
+            Boolean(user.isBlocked)
+    };
+
+    req.userId =
+        String(user._id);
+
+    req.role =
+        normalizedRole;
 };
 
+
+// ======================================
+// FETCH USER
+// ======================================
+const fetchUser = async (
+    userId
+) => {
+
+    try {
+
+        if (
+
+            !userId ||
+
+            !mongoose.Types.ObjectId.isValid(
+                userId
+            )
+
+        ) {
+
+            return null;
+        }
+
+
+        const user = await User.findById(
+            userId
+        )
+
+            .select(
+                "-password -__v"
+            )
+
+            .lean();
+
+
+        if (!user) {
+
+            return null;
+        }
+
+
+        // ======================================
+        // SAFE USER VALIDATION
+        // ======================================
+        if (
+
+            user.isDeleted ||
+
+            user.accountStatus === "deleted"
+
+        ) {
+
+            return null;
+        }
+
+
+        return user;
+
+    } catch (error) {
+
+        console.error(
+            "❌ FETCH USER ERROR:",
+            error.message
+        );
+
+        return null;
+    }
+};
+
+
+// ======================================
+// MAIN AUTH PROTECTION
+// ======================================
+const protect = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        // ======================================
+        // EXTRACT TOKEN
+        // ======================================
+        const token =
+            extractToken(req);
+
+
+        if (!token) {
+
+            return sendError(
+
+                res,
+
+                401,
+
+                "Authentication required"
+            );
+        }
+
+
+        // ======================================
+        // VERIFY TOKEN
+        // ======================================
+        const decoded =
+            verifyToken(token);
+
+
+        if (!decoded) {
+
+            return sendError(
+
+                res,
+
+                401,
+
+                "Invalid or expired token"
+            );
+        }
+
+
+        // ======================================
+        // FETCH USER
+        // ======================================
+        const userId =
+
+            decoded.id ||
+
+            decoded._id;
+
+
+        const user =
+            await fetchUser(userId);
+
+
+        if (!user) {
+
+            return sendError(
+
+                res,
+
+                401,
+
+                "User not found"
+            );
+        }
+
+
+        // ======================================
+        // BLOCKED USER
+        // ======================================
+        if (
+
+            user.isBlocked ||
+
+            user.accountStatus === "blocked" ||
+
+            user.accountStatus === "suspended"
+
+        ) {
+
+            return sendError(
+
+                res,
+
+                403,
+
+                "Account blocked"
+            );
+        }
+
+
+        // ======================================
+        // ATTACH USER
+        // ======================================
+        attachUserToRequest(
+            req,
+            user
+        );
+
+
+        if (DEBUG) {
+
+            console.log(
+                `🔐 AUTHORIZED: ${user.email}`
+            );
+        }
+
+    console.log("🔥 TOKEN VERIFIED");
+        next();
+
+    } catch (error) {
+
+        console.error(
+            "❌ AUTH ERROR:",
+            error.message
+        );
+
+        return sendError(
+
+            res,
+
+            401,
+
+            NODE_ENV === "production"
+                ? "Unauthorized"
+                : error.message
+        );
+    }
+};
+
+
+// ======================================
+// OPTIONAL AUTH
+// ======================================
+const optionalAuth = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const token =
+            extractToken(req);
+
+
+        if (!token) {
+
+            return next();
+        }
+
+
+        const decoded =
+            verifyToken(token);
+
+
+        if (!decoded) {
+
+            return next();
+        }
+
+
+        const user =
+            await fetchUser(
+
+                decoded.id ||
+
+                decoded._id
+            );
+
+
+        if (
+
+            user &&
+
+            !user.isBlocked &&
+
+            user.accountStatus !== "blocked"
+
+        ) {
+
+            attachUserToRequest(
+                req,
+                user
+            );
+        }
+
+
+        next();
+
+    } catch (error) {
+
+        console.warn(
+            "⚠ OPTIONAL AUTH FAILED:",
+            error.message
+        );
+
+        next();
+    }
+};
+
+
+// ======================================
+// ADMIN ONLY
+// ======================================
+const adminOnly = (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        if (!req.user) {
+
+            return sendError(
+
+                res,
+
+                401,
+
+                "Authentication required"
+            );
+        }
+
+
+        if (
+
+            normalizeRole(
+                req.user.role
+            ) !== "admin"
+
+        ) {
+
+            return sendError(
+
+                res,
+
+                403,
+
+                "Admin access required"
+            );
+        }
+
+
+        next();
+
+    } catch (error) {
+
+        console.error(
+            "❌ ADMIN CHECK ERROR:",
+            error.message
+        );
+
+        return sendError(
+
+            res,
+
+            500,
+
+            NODE_ENV === "production"
+                ? "Server error"
+                : error.message
+        );
+    }
+};
+
+
+// ======================================
+// SELF ACCESS CHECK
+// ======================================
+const isSelf = (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        if (!req.userId) {
+
+            return sendError(
+
+                res,
+
+                401,
+
+                "Authentication required"
+            );
+        }
+
+
+        const requestedUserId =
+
+            req.params.userId ||
+
+            req.body.userId ||
+
+            req.query.userId;
+
+
+        if (!requestedUserId) {
+
+            return sendError(
+
+                res,
+
+                400,
+
+                "User ID required"
+            );
+        }
+
+
+        if (
+
+            String(req.userId) !==
+            String(requestedUserId)
+
+        ) {
+
+            return sendError(
+
+                res,
+
+                403,
+
+                "Access denied"
+            );
+        }
+
+
+        next();
+
+    } catch (error) {
+
+        console.error(
+            "❌ SELF ACCESS ERROR:",
+            error.message
+        );
+
+        return sendError(
+
+            res,
+
+            500,
+
+            NODE_ENV === "production"
+                ? "Server error"
+                : error.message
+        );
+    }
+};
+
+
+// ======================================
+// FLEXIBLE ROLE CHECK
+// ======================================
+const hasRole = (
+    ...roles
+) => {
+
+    const normalizedRoles =
+
+        roles.map(normalizeRole);
+
+    return (
+        req,
+        res,
+        next
+    ) => {
+
+        try {
+
+            if (!req.user) {
+
+                return sendError(
+
+                    res,
+
+                    401,
+
+                    "Authentication required"
+                );
+            }
+
+
+            const userRole =
+
+                normalizeRole(
+                    req.user.role
+                );
+
+
+            if (
+
+                !normalizedRoles.includes(
+                    userRole
+                )
+
+            ) {
+
+                return sendError(
+
+                    res,
+
+                    403,
+
+                    "Access denied"
+                );
+            }
+
+
+            next();
+
+        } catch (error) {
+
+            console.error(
+                "❌ ROLE CHECK ERROR:",
+                error.message
+            );
+
+            return sendError(
+
+                res,
+
+                500,
+
+                NODE_ENV === "production"
+                    ? "Server error"
+                    : error.message
+            );
+        }
+    };
+};
+
+
+// ======================================
+// EXPORTS
+// ======================================
 module.exports = {
-  protect,
-  adminOnly,
-  optionalAuth,
-  isSelf,
-  hasRole // 🔥 NEW helper (optional use)
+
+    protect,
+
+    adminOnly,
+
+    optionalAuth,
+
+    isSelf,
+
+    hasRole
 };
