@@ -473,7 +473,7 @@
             // ======================================
             // API BASE
             // ======================================
-            const API_BASE = window.location.origin + "/api";
+            const API_BASE = window.API_BASE;
 
             // ======================================
             // ELEMENTS
@@ -644,7 +644,7 @@
             try {
 
                 await fetch(
-    `${window.location.origin}/api/auth/logout`,
+    `${window.API_BASE}/auth/logout`,
 
                     {
                         method: "POST",
