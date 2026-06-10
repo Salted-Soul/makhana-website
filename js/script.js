@@ -895,7 +895,7 @@ async function loadWishlist() {
 
         const response =
             await fetch(
-                "/api/wishlist",
+    `${API_BASE}/wishlist`,
                 {
                     credentials: "include"
                 }
@@ -959,11 +959,9 @@ async function addToWishlist(
             );
 
         const url =
-            isWishlisted
-
-                ? `/api/wishlist/remove/${productId}`
-
-                : `/api/wishlist/add/${productId}`;
+    isWishlisted
+        ? `${API_BASE}/wishlist/remove/${productId}`
+        : `${API_BASE}/wishlist/add/${productId}`;
 
         const method =
             isWishlisted
