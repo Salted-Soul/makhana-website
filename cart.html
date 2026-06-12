@@ -191,10 +191,12 @@
     <!-- 🔥 TOAST -->
     <div id="toast" class="toast"></div>
 
+    console.log("API_BASE =", window.API_BASE);
+
     <script src="js/config.js"></script>
 
     <script>
-        const API = window.API_BASE;
+        const API_BASE = window.API_BASE;
 
 
         // =======================
@@ -251,7 +253,7 @@
             try {
                 const res = await fetch(
 
-                    API + "/auth/check",
+                    API_BASE + "/auth/check"
 
                     {
                         credentials: "include"
@@ -298,7 +300,7 @@
             try {
                 const { ok, data } = await safeFetch(
 
-                    API + "/cart"
+                    API_BASE + "/cart"
                 );
 
                 console.log("🛒 CART DATA:", data);
@@ -612,7 +614,7 @@ ${name.replace("&amp;", "&")}
             try {
 
                 const { ok } = await safeFetch(
-                    API + "/cart/update",
+                    API_BASE + "/cart/update",
                     {
                         method: "POST",
                         body: JSON.stringify({
@@ -646,7 +648,7 @@ ${name.replace("&amp;", "&")}
             try {
 
                 const { ok } = await safeFetch(
-                    API + "/cart/remove",
+                    API_BASE + "/cart/remove",
                     {
                         method: "POST",
                         body: JSON.stringify({
