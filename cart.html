@@ -191,8 +191,6 @@
     <!-- 🔥 TOAST -->
     <div id="toast" class="toast"></div>
 
-    console.log("API_BASE =", window.API_BASE);
-
     <script src="js/config.js"></script>
 
     <script>
@@ -253,7 +251,7 @@
             try {
                 const res = await fetch(
 
-                    API_BASE + "/auth/check"
+                    API_BASE + "/auth/check",
 
                     {
                         credentials: "include"
