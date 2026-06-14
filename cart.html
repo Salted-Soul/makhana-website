@@ -194,7 +194,7 @@
     <script src="js/config.js"></script>
 
     <script>
-        const API_BASE = window.API_BASE;
+        const CART_API_BASE = window.API_BASE;
 
 
         // =======================
@@ -250,8 +250,7 @@
         async function getUser() {
             try {
                 const res = await fetch(
-
-                    API_BASE + "/auth/check",
+    CART_API_BASE + "/auth/check",
 
                     {
                         credentials: "include"
@@ -297,9 +296,8 @@
 
             try {
                 const { ok, data } = await safeFetch(
-
-                    API_BASE + "/cart"
-                );
+    CART_API_BASE + "/cart"
+);
 
                 console.log("🛒 CART DATA:", data);
 
@@ -612,7 +610,7 @@ ${name.replace("&amp;", "&")}
             try {
 
                 const { ok } = await safeFetch(
-                    API_BASE + "/cart/update",
+    CART_API_BASE + "/cart/update",
                     {
                         method: "POST",
                         body: JSON.stringify({
@@ -646,7 +644,7 @@ ${name.replace("&amp;", "&")}
             try {
 
                 const { ok } = await safeFetch(
-                    API_BASE + "/cart/remove",
+    CART_API_BASE + "/cart/remove",
                     {
                         method: "POST",
                         body: JSON.stringify({
